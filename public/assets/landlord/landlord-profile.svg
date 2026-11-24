@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <linearGradient id="bgPort" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8d5be"/>
+      <stop offset="55%" stop-color="#cfb292"/>
+      <stop offset="100%" stop-color="#9e7856"/>
+    </linearGradient>
+    <radialGradient id="sunHalo" cx="75%" cy="22%" r="55%">
+      <stop offset="0%" stop-color="#fff4db" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#e8d5be" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="blazer" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3d271b"/>
+      <stop offset="100%" stop-color="#24150e"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e4b38d"/>
+      <stop offset="100%" stop-color="#be8660"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Courtyard Architectural Background -->
+  <rect width="800" height="800" fill="url(#bgPort)"/>
+  <rect width="800" height="800" fill="url(#sunHalo)"/>
+
+  <!-- Background Limestone Archway -->
+  <path d="M110 800 L110 290 A290 290 0 0 1 690 290 L690 800 Z" fill="#f4e8d8" opacity="0.55"/>
+  <path d="M165 800 L165 310 A235 235 0 0 1 635 310 L635 800 Z" fill="#b69372" opacity="0.45"/>
+
+  <!-- Poised Landlord / Property Owner Silhouette & Editorial Portrait -->
+  <g transform="translate(0, 30)">
+    <!-- Shoulders & Tailored Espresso Linen Blazer -->
+    <path d="M140 800 C155 595 255 520 400 520 C545 520 645 595 660 800 Z" fill="url(#blazer)"/>
+    <!-- Crisp Cream Linen Shirt & Lapels -->
+    <polygon points="335,520 465,520 430,720 370,720" fill="#f7efe2"/>
+    <polygon points="335,520 385,685 295,620" fill="#523627"/>
+    <polygon points="465,520 415,685 505,620" fill="#523627"/>
+
+    <!-- Neck -->
+    <rect x="356" y="420" width="88" height="125" rx="36" fill="url(#skin)"/>
+    <!-- Subtle Chin Shadow -->
+    <path d="M356 465 Q400 505 444 465 L444 440 L356 440 Z" fill="#9c6744" opacity="0.45"/>
+
+    <!-- Head -->
+    <rect x="308" y="210" width="184" height="245" rx="92" fill="url(#skin)"/>
+
+    <!-- Warm Hair & Styling -->
+    <path d="M302 315 C295 215 345 175 408 175 C478 175 512 225 498 315 C485 260 455 235 398 235 C345 235 318 265 302 315 Z" fill="#2a1a12"/>
+
+    <!-- Minimalist Architectural Sunglasses -->
+    <g transform="translate(326, 296)">
+      <rect x="4" y="0" width="64" height="42" rx="12" fill="#1e120c"/>
+      <rect x="80" y="0" width="64" height="42" rx="12" fill="#1e120c"/>
+      <line x1="68" y1="14" x2="80" y2="14" stroke="#e5b869" stroke-width="4"/>
+      <line x1="-10" y1="12" x2="6" y2="12" stroke="#e5b869" stroke-width="4"/>
+      <line x1="142" y1="12" x2="158" y2="12" stroke="#e5b869" stroke-width="4"/>
+      <!-- Lens Reflection -->
+      <polygon points="14,6 32,6 18,36 8,36" fill="#ffffff" opacity="0.22"/>
+      <polygon points="90,6 108,6 94,36 84,36" fill="#ffffff" opacity="0.22"/>
+    </g>
+
+    <!-- Composed Expression -->
+    <path d="M376 392 Q400 404 424 392" fill="none" stroke="#875334" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</svg>

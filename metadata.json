@@ -1,0 +1,6 @@
+{
+  "name": "Landlords BC — Education, Resources, Community & Advocacy",
+  "description": "A professional, non-adversarial platform for British Columbia rental-property owners under the Residential Tenancy Act (RTA) and RTB framework.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

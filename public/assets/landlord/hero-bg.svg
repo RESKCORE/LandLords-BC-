@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#c8dcf0"/>
+      <stop offset="38%" stop-color="#e5dfd3"/>
+      <stop offset="75%" stop-color="#f3e5cf"/>
+      <stop offset="100%" stop-color="#dfc7ab"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="72%" cy="28%" r="55%">
+      <stop offset="0%" stop-color="#fff6e0" stop-opacity="0.95"/>
+      <stop offset="35%" stop-color="#f7d8a8" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#e8c89b" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="stoneMain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f4eadc"/>
+      <stop offset="50%" stop-color="#e6d6c1"/>
+      <stop offset="100%" stop-color="#cdb79d"/>
+    </linearGradient>
+    <linearGradient id="stoneShadow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#b99e82"/>
+      <stop offset="100%" stop-color="#9c8065"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4a3525"/>
+      <stop offset="45%" stop-color="#7c634e"/>
+      <stop offset="100%" stop-color="#b89878"/>
+    </linearGradient>
+    <linearGradient id="pool" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7da6b8"/>
+      <stop offset="50%" stop-color="#9ec0cc"/>
+      <stop offset="100%" stop-color="#c7d8d6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Warm Mediterranean Sky -->
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <rect width="1600" height="900" fill="url(#sun)"/>
+
+  <!-- Distant Coastal Hills -->
+  <path d="M0 560 Q280 470 620 520 T1260 490 L1600 530 L1600 720 L0 720 Z" fill="#d8c3ab" opacity="0.65"/>
+  <path d="M0 610 Q420 530 890 585 T1600 555 L1600 750 L0 750 Z" fill="#c9b094" opacity="0.75"/>
+
+  <!-- Left Architectural Wing (Modern Travertine Villa) -->
+  <rect x="60" y="210" width="540" height="490" fill="url(#stoneMain)"/>
+  <rect x="600" y="210" width="65" height="490" fill="url(#stoneShadow)"/>
+  <!-- Roof Overhang -->
+  <rect x="40" y="190" width="640" height="24" fill="#f8f1e7"/>
+  <rect x="40" y="214" width="640" height="8" fill="#8f7259"/>
+
+  <!-- Arched Penthouse Windows Left -->
+  <g transform="translate(120, 270)">
+    <path d="M0 70 A55 55 0 0 1 110 70 L110 210 L0 210 Z" fill="url(#glass)"/>
+    <path d="M150 70 A55 55 0 0 1 260 70 L260 210 L150 210 Z" fill="url(#glass)"/>
+    <path d="M300 70 A55 55 0 0 1 410 70 L410 210 L300 210 Z" fill="url(#glass)"/>
+    <!-- Window Mullions -->
+    <line x1="55" y1="15" x2="55" y2="210" stroke="#e6d6c1" stroke-width="4"/>
+    <line x1="205" y1="15" x2="205" y2="210" stroke="#e6d6c1" stroke-width="4"/>
+    <line x1="355" y1="15" x2="355" y2="210" stroke="#e6d6c1" stroke-width="4"/>
+    <line x1="0" y1="115" x2="410" y2="115" stroke="#e6d6c1" stroke-width="4"/>
+  </g>
+
+  <!-- Right Architectural Wing -->
+  <rect x="960" y="160" width="580" height="540" fill="url(#stoneMain)"/>
+  <rect x="910" y="160" width="50" height="540" fill="url(#stoneShadow)"/>
+  <rect x="895" y="138" width="660" height="24" fill="#f8f1e7"/>
+  <rect x="895" y="162" width="660" height="8" fill="#8f7259"/>
+
+  <!-- Right Wing Recessed Balconies -->
+  <g transform="translate(1020, 220)">
+    <rect x="0" y="0" width="200" height="190" rx="8" fill="url(#glass)"/>
+    <rect x="240" y="0" width="200" height="190" rx="8" fill="url(#glass)"/>
+    <!-- Warm Interior Curtains & Glow -->
+    <path d="M8 8 L65 8 L45 182 L8 182 Z" fill="#f7ead9" opacity="0.55"/>
+    <path d="M248 8 L305 8 L285 182 L248 182 Z" fill="#f7ead9" opacity="0.55"/>
+    <!-- Balcony Railings -->
+    <rect x="-10" y="165" width="460" height="28" fill="#e5d4be" opacity="0.88"/>
+    <line x1="-10" y1="165" x2="450" y2="165" stroke="#3b2116" stroke-width="2" stroke-opacity="0.35"/>
+  </g>
+
+  <!-- Lower Colonnade & Courtyard -->
+  <rect x="120" y="520" width="410" height="160" fill="#5e4634"/>
+  <rect x="1020" y="455" width="440" height="225" fill="#5e4634"/>
+  <!-- Warm Indoor Lamps -->
+  <circle cx="220" cy="560" r="36" fill="#ffdfa8" opacity="0.45"/>
+  <circle cx="410" cy="560" r="36" fill="#ffdfa8" opacity="0.45"/>
+  <circle cx="1150" cy="510" r="44" fill="#ffdfa8" opacity="0.5"/>
+  <circle cx="1350" cy="510" r="44" fill="#ffdfa8" opacity="0.5"/>
+
+  <!-- Sunlit Travertine Courtyard Deck & Reflecting Pool -->
+  <polygon points="0,700 1600,700 1600,900 0,900" fill="#e9dac6"/>
+  <polygon points="240,730 1360,730 1490,900 110,900" fill="url(#pool)"/>
+  <line x1="240" y1="730" x2="1360" y2="730" stroke="#fff8ee" stroke-width="5"/>
+
+  <!-- Mediterranean Olive & Cypress Foliage Silhouettes -->
+  <g fill="#5b6349" opacity="0.82">
+    <circle cx="70" cy="640" r="68"/>
+    <circle cx="135" cy="655" r="54"/>
+    <circle cx="1510" cy="620" r="82"/>
+    <circle cx="1435" cy="650" r="62"/>
+  </g>
+</svg>

@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200" width="900" height="1200">
+  <defs>
+    <linearGradient id="wall" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f6efe4"/>
+      <stop offset="55%" stop-color="#e9dccb"/>
+      <stop offset="100%" stop-color="#d2be9f"/>
+    </linearGradient>
+    <linearGradient id="sunbeam" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fffaf0" stop-opacity="0.78"/>
+      <stop offset="60%" stop-color="#fce8c3" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#e8cfb0" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#c9ab88"/>
+      <stop offset="100%" stop-color="#9e7b56"/>
+    </linearGradient>
+    <linearGradient id="sofa" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fbf7f0"/>
+      <stop offset="100%" stop-color="#dfd1be"/>
+    </linearGradient>
+    <linearGradient id="terracotta" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d87a4a"/>
+      <stop offset="100%" stop-color="#a44a24"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Plaster Wall -->
+  <rect width="900" height="840" fill="url(#wall)"/>
+
+  <!-- Tall Arched Terrace Window -->
+  <g transform="translate(470, 90)">
+    <path d="M0 170 A170 170 0 0 1 340 170 L340 700 L0 700 Z" fill="#d9e7f2"/>
+    <path d="M0 500 L340 470 L340 700 L0 700 Z" fill="#e5d2ba"/>
+    <!-- Distant Mediterranean Sea & Villa View -->
+    <rect x="0" y="420" width="340" height="90" fill="#90b4c4"/>
+    <!-- Window Frame -->
+    <path d="M0 170 A170 170 0 0 1 340 170 L340 700 L0 700 Z" fill="none" stroke="#8a6b52" stroke-width="14"/>
+    <line x1="170" y1="0" x2="170" y2="700" stroke="#8a6b52" stroke-width="10"/>
+    <line x1="0" y1="350" x2="340" y2="350" stroke="#8a6b52" stroke-width="10"/>
+    <line x1="0" y1="530" x2="340" y2="530" stroke="#8a6b52" stroke-width="10"/>
+  </g>
+
+  <!-- Framed Minimalist Architectural Art on Left Wall -->
+  <g transform="translate(95, 190)">
+    <rect x="0" y="0" width="260" height="340" fill="#ece2d2" stroke="#5c422e" stroke-width="10"/>
+    <circle cx="130" cy="145" r="68" fill="#d48b5c" opacity="0.8"/>
+    <path d="M40 280 Q130 190 220 280 Z" fill="#3b2116" opacity="0.75"/>
+  </g>
+
+  <!-- Warm Oak Herringbone Floor -->
+  <polygon points="0,840 900,840 900,1200 0,1200" fill="url(#floor)"/>
+  <!-- Area Rug -->
+  <polygon points="60,900 840,900 900,1180 10,1180" fill="#efe6d8"/>
+
+  <!-- Dappled Sunlight Beams Across Wall & Floor -->
+  <polygon points="470,130 810,130 900,1120 180,1120" fill="url(#sunbeam)"/>
+
+  <!-- Designer Bouclé Linen Sofa -->
+  <g transform="translate(70, 650)">
+    <!-- Backrest -->
+    <rect x="30" y="0" width="640" height="145" rx="42" fill="url(#sofa)"/>
+    <!-- Cushions -->
+    <rect x="15" y="105" width="325" height="95" rx="28" fill="#f7f1e6"/>
+    <rect x="342" y="105" width="325" height="95" rx="28" fill="#f3ebde"/>
+    <!-- Armrests -->
+    <rect x="-10" y="55" width="65" height="165" rx="30" fill="#e6d9c6"/>
+    <rect x="635" y="55" width="65" height="165" rx="30" fill="#dfd0ba"/>
+    <!-- Terracotta & Olive Throw Pillows -->
+    <rect x="65" y="38" width="95" height="82" rx="18" transform="rotate(-8 65 38)" fill="url(#terracotta)"/>
+    <rect x="515" y="35" width="95" height="82" rx="18" transform="rotate(6 515 35)" fill="#7a8464"/>
+  </g>
+
+  <!-- Travertine Plinth Coffee Table -->
+  <g transform="translate(240, 915)">
+    <rect x="35" y="38" width="350" height="88" rx="8" fill="#d3bfa4"/>
+    <ellipse cx="210" cy="38" rx="210" ry="28" fill="#f2e8da"/>
+    <!-- Ceramic Vessel & Botanicals -->
+    <path d="M190 -25 C175 -25 170 25 190 35 L230 35 C250 25 245 -25 230 -25 Z" fill="#3b2116"/>
+    <path d="M210 -25 Q175 -85 140 -105" stroke="#6b7556" stroke-width="4" fill="none"/>
+    <path d="M210 -25 Q245 -95 275 -115" stroke="#6b7556" stroke-width="4" fill="none"/>
+    <ellipse cx="155" cy="-95" rx="16" ry="8" transform="rotate(-25 155 -95)" fill="#7d8966"/>
+    <ellipse cx="260" cy="-105" rx="16" ry="8" transform="rotate(25 260 -105)" fill="#7d8966"/>
+  </g>
+</svg>

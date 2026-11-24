@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200" width="900" height="1200">
+  <defs>
+    <linearGradient id="facadeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e9c89b"/>
+      <stop offset="45%" stop-color="#d59f6b"/>
+      <stop offset="100%" stop-color="#7c492b"/>
+    </linearGradient>
+    <linearGradient id="shadowCast" x1="0%" y1="0%" x2="100%" y2="80%">
+      <stop offset="0%" stop-color="#2a1a12" stop-opacity="0.58"/>
+      <stop offset="100%" stop-color="#2a1a12" stop-opacity="0.1"/>
+    </linearGradient>
+    <linearGradient id="winGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2d1c12"/>
+      <stop offset="65%" stop-color="#6e4527"/>
+      <stop offset="100%" stop-color="#f2b976"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Golden Hour Limestone Townhouse Facade -->
+  <rect width="900" height="1200" fill="url(#facadeGrad)"/>
+
+  <!-- Architectural Cornice & Horizontal Stone Courses -->
+  <rect x="0" y="90" width="900" height="36" fill="#f3dec0"/>
+  <rect x="0" y="126" width="900" height="14" fill="#6b3e23"/>
+  <line x1="0" y1="320" x2="900" y2="320" stroke="#99643f" stroke-width="2" opacity="0.5"/>
+  <line x1="0" y1="540" x2="900" y2="540" stroke="#99643f" stroke-width="2" opacity="0.5"/>
+  <line x1="0" y1="760" x2="900" y2="760" stroke="#99643f" stroke-width="2" opacity="0.5"/>
+  <line x1="0" y1="980" x2="900" y2="980" stroke="#99643f" stroke-width="2" opacity="0.5"/>
+
+  <!-- Dramatic Diagonal Golden Hour Shadow -->
+  <polygon points="0,0 560,0 120,1200 0,1200" fill="url(#shadowCast)"/>
+
+  <!-- Upper Row Arched French Windows -->
+  <g transform="translate(130, 210)">
+    <path d="M0 120 A115 115 0 0 1 230 120 L230 390 L0 390 Z" fill="#f4e0c6"/>
+    <path d="M18 125 A97 97 0 0 1 212 125 L212 375 L18 375 Z" fill="url(#winGlow)"/>
+    <line x1="115" y1="28" x2="115" y2="375" stroke="#f4e0c6" stroke-width="8"/>
+    <line x1="18" y1="210" x2="212" y2="210" stroke="#f4e0c6" stroke-width="8"/>
+    <!-- Juliet Balcony Ironwork -->
+    <rect x="-12" y="320" width="254" height="58" fill="none" stroke="#2a1a12" stroke-width="6"/>
+    <line x1="30" y1="320" x2="30" y2="378" stroke="#2a1a12" stroke-width="5"/>
+    <line x1="72" y1="320" x2="72" y2="378" stroke="#2a1a12" stroke-width="5"/>
+    <line x1="115" y1="320" x2="115" y2="378" stroke="#2a1a12" stroke-width="5"/>
+    <line x1="158" y1="320" x2="158" y2="378" stroke="#2a1a12" stroke-width="5"/>
+    <line x1="200" y1="320" x2="200" y2="378" stroke="#2a1a12" stroke-width="5"/>
+  </g>
+
+  <g transform="translate(540, 210)">
+    <path d="M0 120 A115 115 0 0 1 230 120 L230 390 L0 390 Z" fill="#f4e0c6"/>
+    <path d="M18 125 A97 97 0 0 1 212 125 L212 375 L18 375 Z" fill="url(#winGlow)"/>
+    <line x1="115" y1="28" x2="115" y2="375" stroke="#f4e0c6" stroke-width="8"/>
+    <line x1="18" y1="210" x2="212" y2="210" stroke="#f4e0c6" stroke-width="8"/>
+    <rect x="-12" y="320" width="254" height="58" fill="none" stroke="#2a1a12" stroke-width="6"/>
+    <line x1="30" y1="320" x2="30" y2="378" stroke="#2a1a12" stroke-width="5"/>
+    <line x1="72" y1="320" x2="72" y2="378" stroke="#2a1a12" stroke-width="5"/>
+    <line x1="115" y1="320" x2="115" y2="378" stroke="#2a1a12" stroke-width="5"/>
+    <line x1="158" y1="320" x2="158" y2="378" stroke="#2a1a12" stroke-width="5"/>
+    <line x1="200" y1="320" x2="200" y2="378" stroke="#2a1a12" stroke-width="5"/>
+  </g>
+
+  <!-- Lower Grand Archway Entrance -->
+  <g transform="translate(275, 680)">
+    <path d="M0 175 A175 175 0 0 1 350 175 L350 520 L0 520 Z" fill="#f5e3ca"/>
+    <path d="M24 180 A151 151 0 0 1 326 180 L326 520 L24 520 Z" fill="#3b2116"/>
+    <!-- Brass Lantern Glow -->
+    <circle cx="175" cy="150" r="65" fill="#f7c873" opacity="0.45"/>
+    <circle cx="175" cy="150" r="16" fill="#fff6df"/>
+    <!-- Double Oak Doors -->
+    <rect x="52" y="220" width="118" height="290" fill="#5e341e" stroke="#8c583a" stroke-width="4"/>
+    <rect x="180" y="220" width="118" height="290" fill="#5e341e" stroke="#8c583a" stroke-width="4"/>
+    <circle cx="156" cy="365" r="7" fill="#f2c94c"/>
+    <circle cx="194" cy="365" r="7" fill="#f2c94c"/>
+  </g>
+</svg>

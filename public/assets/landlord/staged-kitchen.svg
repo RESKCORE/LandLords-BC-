@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 800" width="1000" height="800">
+  <defs>
+    <linearGradient id="kWall" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f7f0e6"/>
+      <stop offset="100%" stop-color="#e3d3be"/>
+    </linearGradient>
+    <linearGradient id="oakCab" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#b98b62"/>
+      <stop offset="100%" stop-color="#8a5f3c"/>
+    </linearGradient>
+    <linearGradient id="marble" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdfbf7"/>
+      <stop offset="50%" stop-color="#f1eae0"/>
+      <stop offset="100%" stop-color="#dfd4c5"/>
+    </linearGradient>
+    <linearGradient id="brass" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#e3b963"/>
+      <stop offset="50%" stop-color="#f8df9d"/>
+      <stop offset="100%" stop-color="#b68834"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Warm Plaster Kitchen Backdrop -->
+  <rect width="1000" height="800" fill="url(#kWall)"/>
+
+  <!-- Sunlit Window Glow Right -->
+  <polygon points="620,0 1000,0 1000,800 380,800" fill="#fff7e5" opacity="0.5"/>
+
+  <!-- Marble Backsplash Slab & Floating Shelf -->
+  <rect x="90" y="130" width="820" height="260" fill="url(#marble)"/>
+  <path d="M120 180 Q280 230 410 155 T790 245" stroke="#c8baa8" stroke-width="3" fill="none" opacity="0.65"/>
+  <path d="M220 340 Q460 280 680 355" stroke="#d4c6b4" stroke-width="2" fill="none" opacity="0.65"/>
+  <rect x="90" y="210" width="820" height="18" fill="url(#oakCab)"/>
+
+  <!-- Designer Pendant Lights -->
+  <line x1="330" y1="0" x2="330" y2="170" stroke="#3b2116" stroke-width="3"/>
+  <path d="M275 170 A55 45 0 0 1 385 170 Z" fill="#f5ede0" stroke="#c7b299" stroke-width="3"/>
+  <circle cx="330" cy="175" r="14" fill="#ffe6ab"/>
+
+  <line x1="670" y1="0" x2="670" y2="170" stroke="#3b2116" stroke-width="3"/>
+  <path d="M615 170 A55 45 0 0 1 725 170 Z" fill="#f5ede0" stroke="#c7b299" stroke-width="3"/>
+  <circle cx="670" cy="175" r="14" fill="#ffe6ab"/>
+
+  <!-- Rear Fluted Oak Cabinetry -->
+  <rect x="90" y="390" width="820" height="220" fill="url(#oakCab)"/>
+  <line x1="295" y1="390" x2="295" y2="610" stroke="#634126" stroke-width="3"/>
+  <line x1="500" y1="390" x2="500" y2="610" stroke="#634126" stroke-width="3"/>
+  <line x1="705" y1="390" x2="705" y2="610" stroke="#634126" stroke-width="3"/>
+
+  <!-- Brushed Brass Arc Faucet -->
+  <path d="M500 390 L500 305 A38 38 0 0 1 576 305 L576 335" fill="none" stroke="url(#brass)" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Foreground Waterfall Calacatta Marble Kitchen Island -->
+  <g transform="translate(150, 485)">
+    <rect x="0" y="0" width="700" height="315" fill="url(#marble)"/>
+    <rect x="0" y="0" width="700" height="34" fill="#ffffff"/>
+    <rect x="36" y="34" width="628" height="281" fill="#e6dacb"/>
+    <!-- Subtle Marble Veining -->
+    <path d="M20 16 Q210 30 390 12 T680 24" stroke="#bfb09c" stroke-width="2.5" fill="none"/>
+
+    <!-- Sculptural Ceramic Pitcher & Olive Branches on Island -->
+    <g transform="translate(210, -95)">
+      <path d="M25 20 C8 20 5 85 22 96 L68 96 C85 85 82 20 65 20 Z" fill="#3a2419"/>
+      <path d="M65 34 C92 34 92 72 66 76" fill="none" stroke="#3a2419" stroke-width="7"/>
+      <path d="M45 20 Q15 -35 -15 -55" stroke="#65704f" stroke-width="4" fill="none"/>
+      <path d="M45 20 Q78 -45 110 -60" stroke="#65704f" stroke-width="4" fill="none"/>
+      <ellipse cx="0" cy="-45" rx="18" ry="8" transform="rotate(-25 0 -45)" fill="#7d8a64"/>
+      <ellipse cx="90" cy="-52" rx="18" ry="8" transform="rotate(20 90 -52)" fill="#7d8a64"/>
+    </g>
+
+    <!-- Travertine Fruit Bowl -->
+    <g transform="translate(410, -36)">
+      <path d="M0 10 Q65 48 130 10 Z" fill="#c9b49a"/>
+      <rect x="42" y="24" width="46" height="14" rx="4" fill="#b39c80"/>
+      <circle cx="48" cy="6" r="14" fill="#e2875c"/>
+      <circle cx="78" cy="8" r="13" fill="#f2c94c"/>
+    </g>
+  </g>
+</svg>
