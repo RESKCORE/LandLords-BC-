@@ -525,7 +525,12 @@ export default function App() {
       />
 
       <main>
-        <Hero />
+        <Hero
+          isMember={isMember}
+          googleUser={googleUser}
+          onOpenMemberDashboard={handleOpenMemberDashboard}
+          onOpenMembership={handleOpenMembership}
+        />
         <BentoSection
           onOpenStory={handleOpenStory}
           onSubmitStory={handleOpenStorySubmit}

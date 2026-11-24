@@ -2,7 +2,19 @@ import React, { useEffect } from 'react';
 import { BackgroundVideo } from './common/BackgroundVideo';
 import { VIDEOS, POSTERS } from '../data/constants';
 
-export const Hero: React.FC = () => {
+interface HeroProps {
+  isMember?: boolean;
+  googleUser?: { name: string; email: string; picture?: string } | null;
+  onOpenMemberDashboard?: () => void;
+  onOpenMembership?: (planChoice?: string) => void;
+}
+
+export const Hero: React.FC<HeroProps> = ({
+  isMember = false,
+  googleUser = null,
+  onOpenMemberDashboard,
+  onOpenMembership,
+}) => {
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -97,6 +109,87 @@ export const Hero: React.FC = () => {
           >
             Education, resources, community, and advocacy for British Columbia rental-property owners under the Residential Tenancy Act (RTA).
           </p>
+
+          <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
+            {isMember ? (
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  background: 'rgba(30, 65, 40, 0.88)',
+                  backdropFilter: 'blur(14px)',
+                  color: '#f6f0e7',
+                  padding: '7px 18px',
+                  borderRadius: '999px',
+                  boxShadow: '0 4px 18px rgba(30, 65, 40, 0.22)',
+                  fontSize: '12.5px',
+                  border: '1px solid rgba(157, 232, 171, 0.35)',
+                }}
+              >
+                <span style={{ color: '#9de8ab', fontWeight: 'bold' }}>✓</span>
+                <span>
+                  Active Member Session: <strong>{googleUser?.name || 'Verified Landlord'}</strong> ({localStorage.getItem('landlords_member_id') || 'BC-MEM-8421'})
+                </span>
+                {onOpenMemberDashboard && (
+                  <button
+                    type="button"
+                    onClick={onOpenMemberDashboard}
+                    style={{
+                      background: 'rgba(255,255,255,0.22)',
+                      border: 'none',
+                      color: '#ffffff',
+                      borderRadius: '999px',
+                      padding: '2px 10px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Open Legal Vault →
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: 'rgba(255, 255, 255, 0.65)',
+                  backdropFilter: 'blur(14px)',
+                  color: '#4a3b32',
+                  padding: '6px 16px',
+                  borderRadius: '999px',
+                  boxShadow: '0 2px 8px rgba(42, 26, 18, 0.04)',
+                  fontSize: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.85)',
+                }}
+              >
+                <span style={{ color: '#8c7b6f' }}>🔒 Non-Member Public View</span>
+                <span>·</span>
+                <span>Join to unlock full RTB legal kits &amp; advisor helpline</span>
+                {onOpenMembership && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenMembership('individual')}
+                    style={{
+                      background: '#3b2116',
+                      border: 'none',
+                      color: '#f6f0e7',
+                      borderRadius: '999px',
+                      padding: '3px 10px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Join from $290 CAD
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div
@@ -115,7 +208,19 @@ export const Hero: React.FC = () => {
           <div id="studio" className="studio">
             <div className="chat">
               <div className="chat-top msg">
-                <span>BC Member Consultation Desk · File #BC-409</span>
+                {isMember ? (
+                  <div style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#1e4128', fontWeight: 600 }}>
+                      <span style={{ color: '#2e6b3b' }}>●</span>
+                      BC Member Consultation Desk · File #{localStorage.getItem('landlords_member_id') || 'BC-MEM-8421'}
+                    </span>
+                    <span style={{ fontSize: '10px', background: '#d4ecd7', color: '#1e4128', padding: '2px 8px', borderRadius: '999px', fontWeight: 700 }}>
+                      MEMBER VERIFIED
+                    </span>
+                  </div>
+                ) : (
+                  <span>BC Member Consultation Desk · File #BC-409</span>
+                )}
                 <svg
                   viewBox="0 0 10 10"
                   fill="none"

@@ -20,6 +20,52 @@ export const ResourcesModal: React.FC<ResourcesModalProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedGuide, setSelectedGuide] = useState<ResourceGuide | null>(null);
 
+  const handleDownloadTemplate = (form: FormItem) => {
+    const memberId = localStorage.getItem('landlords_member_id') || 'BC-MEM-8421';
+    const content = `========================================================================
+LANDLORDS BC — VERIFIED STATUTORY MEMBER TEMPLATE
+Document Code: ${form.code}
+Title: ${form.title}
+Badge: ${form.badge}
+Jurisdiction: British Columbia, Canada (Residential Tenancy Act SBC 2002, c. 78)
+Issued Under Active Member ID: ${memberId}
+Date Generated: ${new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}
+========================================================================
+
+1. PURPOSE & OVERVIEW
+${form.description}
+
+2. STATUTORY SERVICE REQUIREMENTS (BC RTA SECTION 88 & 90)
+- In Person: Deemed served immediately on the same date.
+- Posting to Front Door or Mailbox: Deemed received 3 full calendar days later.
+- Sent by Registered Mail: Deemed received 5 full calendar days later.
+- Email Service: Allowed only with prior written consent (Form RTB-51) and deemed received 3 days later.
+
+3. REQUIRED FORM DETAILS & CHECKLIST
+[ ] Property Unit Address: _____________________________________________
+[ ] Tenant Legal Full Name: ___________________________________________
+[ ] Landlord Representative Name: _____________________________________
+[ ] Date Notice Served: _______________________________________________
+[ ] Exact Method of Service: [ ] In Person  [ ] Door Post  [ ] Reg Mail
+[ ] Witness or Proof of Delivery Attached: [ ] Yes  [ ] No
+
+4. RTB DISPUTE ADMISSIBILITY NOTE
+Never alter standard government clauses or attempt to contract out of the BC Residential Tenancy Act (Section 5). Keep this completed document in your Landlords BC Private Documentation Vault for formal dispute hearings.
+
+Landlords BC Priority Helpline: 1-800-555-0199
+Zero-Disclosure Charter: Verified Confidential & Proprietary Document.`;
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${form.code}-${form.title.replace(/[^a-zA-Z0-9]/g, '_')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   if (!isOpen) return null;
 
   const filteredGuides = RESOURCE_GUIDES.filter((guide) => {
@@ -532,7 +578,7 @@ export const ResourcesModal: React.FC<ResourcesModalProps> = ({
                         type="button"
                         onClick={() => {
                           if (isMember) {
-                            alert(`Downloading verified template: ${form.code} - ${form.title}`);
+                            handleDownloadTemplate(form);
                           } else if (onSelectPlan) {
                             onClose();
                             onSelectPlan('individual');
