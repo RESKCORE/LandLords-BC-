@@ -7,6 +7,8 @@ interface NavbarProps {
   onOpenResources: () => void;
   onOpenMemberDashboard: () => void;
   isMember?: boolean;
+  googleUser?: { name: string; email: string; picture?: string } | null;
+  onGoogleSignIn?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -15,6 +17,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenResources,
   onOpenMemberDashboard,
   isMember = false,
+  googleUser = null,
+  onGoogleSignIn,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -141,17 +145,52 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="nav-btn-member-glass"
                 type="button"
                 onClick={onOpenMemberDashboard}
+                title="Open Active Member Dashboard & Vault"
               >
-                Active Member ✓
+                {googleUser?.picture ? (
+                  <img
+                    src={googleUser.picture}
+                    alt={googleUser.name}
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      marginRight: '6px',
+                      border: '1px solid rgba(255, 255, 255, 0.65)',
+                      objectFit: 'cover',
+                      display: 'inline-block',
+                      verticalAlign: 'middle',
+                    }}
+                  />
+                ) : null}
+                <span>Active Member ✓</span>
               </button>
             ) : (
-              <button
-                className="nav-btn-glass"
-                type="button"
-                onClick={() => onOpenMembership('individual')}
-              >
-                Join Association
-              </button>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                {onGoogleSignIn && (
+                  <button
+                    className="nav-btn-signin-glass"
+                    type="button"
+                    onClick={onGoogleSignIn}
+                    title="Sign in with your Google account to restore membership"
+                  >
+                    <svg viewBox="0 0 18 18" width="14" height="14" style={{ flexShrink: 0 }}>
+                      <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z" />
+                      <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" />
+                      <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" />
+                      <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" />
+                    </svg>
+                    <span>Sign In</span>
+                  </button>
+                )}
+                <button
+                  className="nav-btn-glass"
+                  type="button"
+                  onClick={() => onOpenMembership('individual')}
+                >
+                  Join Association
+                </button>
+              </div>
             )}
 
             <button
@@ -201,16 +240,30 @@ export const Navbar: React.FC<NavbarProps> = ({
             Member Dashboard ✓
           </a>
         ) : (
-          <a
-            href="#join"
-            onClick={(e) => {
-              e.preventDefault();
-              setMobileMenuOpen(false);
-              onOpenMembership('individual');
-            }}
-          >
-            Join Association (CAD)
-          </a>
+          <>
+            {onGoogleSignIn && (
+              <a
+                href="#signin"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMobileMenuOpen(false);
+                  onGoogleSignIn();
+                }}
+              >
+                Sign In with Google
+              </a>
+            )}
+            <a
+              href="#join"
+              onClick={(e) => {
+                e.preventDefault();
+                setMobileMenuOpen(false);
+                onOpenMembership('individual');
+              }}
+            >
+              Join Association (CAD)
+            </a>
+          </>
         )}
         <a href={CONTACT_INFO.phoneHref}>
           Call Helpline: {CONTACT_INFO.phone}

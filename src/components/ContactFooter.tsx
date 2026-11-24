@@ -119,10 +119,10 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({
           </span>
         </div>
 
-        <footer className="footer">
-          <div className="cols">
+        <footer className="foot footer">
+          <div className="foot-grid cols">
             <div
-              className="c-brand rv"
+              className="about c-brand rv"
               style={{ ['--d' as string]: 0 }}
             >
               <div className="badge">
@@ -174,7 +174,7 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({
             </div>
 
             <div
-              className="rv"
+              className="foot-col rv"
               style={{ ['--d' as string]: 1 }}
             >
               <h6>Membership &amp; Resources</h6>
@@ -215,7 +215,7 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({
             </div>
 
             <div
-              className="rv"
+              className="foot-col rv"
               style={{ ['--d' as string]: 2 }}
             >
               <h6>RTA &amp; Privacy</h6>
@@ -262,7 +262,7 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({
             </div>
 
             <div
-              className="rv"
+              className="foot-col rv"
               style={{ ['--d' as string]: 3 }}
             >
               <h6>Direct Helpline</h6>
@@ -300,62 +300,38 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({
           </div>
 
           <div className="legal">
-            <span
-              style={{
-                maxWidth: '850px',
-                textAlign: 'center',
-                display: 'block',
-                margin: '0 auto 10px',
-                fontSize: '12.5px',
-                color: '#6d5a4d',
-                lineHeight: '1.5',
-              }}
-            >
+            <span className="legal-disclaimer">
               General educational information for BC rental-property owners under the RTA framework, not formal legal advice. Always review official RTB statutory guidelines or consult qualified counsel.
             </span>
-            <div
-              style={{
-                display: 'flex',
-                gap: '16px',
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-                fontSize: '12px',
-                color: '#8c7b6f',
-              }}
-            >
+            <div className="legal-links">
               <span>© Copyright Landlords BC 2026</span>
               <button
                 type="button"
                 onClick={() => onOpenPolicy('privacy')}
-                style={{ background: 'none', border: 'none', color: '#6d5a4d', cursor: 'pointer', textDecoration: 'underline' }}
               >
                 Privacy Policy
               </button>
               <button
                 type="button"
                 onClick={() => onOpenPolicy('terms')}
-                style={{ background: 'none', border: 'none', color: '#6d5a4d', cursor: 'pointer', textDecoration: 'underline' }}
               >
                 Terms of Service
               </button>
               <button
                 type="button"
                 onClick={() => onOpenPolicy('community')}
-                style={{ background: 'none', border: 'none', color: '#6d5a4d', cursor: 'pointer', textDecoration: 'underline' }}
               >
                 Community Guidelines
               </button>
               <button
                 type="button"
                 onClick={() => onOpenPolicy('retention')}
-                style={{ background: 'none', border: 'none', color: '#6d5a4d', cursor: 'pointer', textDecoration: 'underline' }}
               >
                 Data Retention
               </button>
               <button
                 type="button"
                 onClick={() => onOpenPolicy('accessibility')}
-                style={{ background: 'none', border: 'none', color: '#6d5a4d', cursor: 'pointer', textDecoration: 'underline' }}
               >
                 Accessibility
               </button>

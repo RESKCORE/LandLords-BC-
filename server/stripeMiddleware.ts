@@ -13,6 +13,36 @@ if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 const testimoniesFile = path.join(dataDir, 'testimonies.json');
+const membersFile = path.join(dataDir, 'members.json');
+
+function getMembers(): any[] {
+  if (fs.existsSync(membersFile)) {
+    try {
+      return JSON.parse(fs.readFileSync(membersFile, 'utf8'));
+    } catch (_) {}
+  }
+  return [];
+}
+
+function saveMember(member: {
+  email: string;
+  name?: string;
+  plan: string;
+  memberId: string;
+  status?: string;
+  joinedAt?: string;
+}) {
+  const members = getMembers();
+  const existingIdx = members.findIndex(
+    (m: any) => m.email && m.email.toLowerCase() === member.email.toLowerCase()
+  );
+  if (existingIdx >= 0) {
+    members[existingIdx] = { ...members[existingIdx], ...member };
+  } else {
+    members.unshift(member);
+  }
+  fs.writeFileSync(membersFile, JSON.stringify(members, null, 2));
+}
 
 export function stripePlugin() {
   return {
@@ -170,7 +200,7 @@ export function stripePlugin() {
         });
       });
 
-      // 3. Direct Send Welcome / Receipt Email Endpoint
+      // 3. Direct Send Welcome / Receipt Email Endpoint & Member Recording
       server.middlewares.use('/api/send-welcome-receipt', async (req, res) => {
         if (req.method !== 'POST') {
           res.statusCode = 405;
@@ -185,15 +215,148 @@ export function stripePlugin() {
 
         req.on('end', async () => {
           try {
-            const { email, plan } = JSON.parse(body || '{}');
+            const { email, plan, name } = JSON.parse(body || '{}');
             const targetEmail =
               email || process.env.HOST_EMAIL || 'reddysantosh1310@gmail.com';
             const planName =
               plan || 'Individual Membership ($290 CAD / year)';
+            
+            // Record as active member
+            const memberId = `BC-MEM-${Math.floor(1000 + Math.random() * 9000)}`;
+            saveMember({
+              email: targetEmail,
+              name: name || targetEmail.split('@')[0],
+              plan: planName,
+              memberId,
+              status: 'active',
+              joinedAt: new Date().toISOString(),
+            });
+
             await sendPaymentWelcomeEmail(targetEmail, planName);
             res.statusCode = 200;
             res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify({ success: true, email: targetEmail }));
+            res.end(JSON.stringify({ success: true, email: targetEmail, memberId }));
+          } catch (err: any) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: err.message }));
+          }
+        });
+      });
+
+      // 4. Check Membership by Email (for instant identification on Google sign-in)
+      server.middlewares.use('/api/check-membership', async (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405;
+          res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+          return;
+        }
+
+        let body = '';
+        req.on('data', (chunk) => {
+          body += chunk;
+        });
+
+        req.on('end', async () => {
+          try {
+            const { email } = JSON.parse(body || '{}');
+            if (!email) {
+              res.statusCode = 200;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ isMember: false }));
+              return;
+            }
+
+            const cleanEmail = email.trim().toLowerCase();
+            const hostEmail = (process.env.HOST_EMAIL || 'reddysantosh1310@gmail.com').toLowerCase();
+
+            // Host / Admin email is always an active member
+            if (cleanEmail === hostEmail || cleanEmail === 'reddysantosh1310@gmail.com') {
+              res.statusCode = 200;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(
+                JSON.stringify({
+                  isMember: true,
+                  plan: 'Property Manager Membership ($590 CAD / year)',
+                  memberId: 'BC-MEM-8421',
+                  email: cleanEmail,
+                  status: 'active',
+                  name: 'Verified BC Landlord',
+                })
+              );
+              return;
+            }
+
+            const members = getMembers();
+            const found = members.find(
+              (m: any) => m.email && m.email.toLowerCase() === cleanEmail && m.status === 'active'
+            );
+
+            if (found) {
+              res.statusCode = 200;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(
+                JSON.stringify({
+                  isMember: true,
+                  plan: found.plan || 'Individual Membership ($290 CAD / year)',
+                  memberId: found.memberId || 'BC-MEM-7740',
+                  email: found.email,
+                  status: found.status,
+                  name: found.name,
+                })
+              );
+              return;
+            }
+
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ isMember: false }));
+          } catch (err: any) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: err.message }));
+          }
+        });
+      });
+
+      // 5. Register Membership Endpoint
+      server.middlewares.use('/api/register-membership', async (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405;
+          res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+          return;
+        }
+
+        let body = '';
+        req.on('data', (chunk) => {
+          body += chunk;
+        });
+
+        req.on('end', async () => {
+          try {
+            const { email, name, plan } = JSON.parse(body || '{}');
+            if (!email) {
+              res.statusCode = 400;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ error: 'Email required' }));
+              return;
+            }
+
+            const cleanEmail = email.trim().toLowerCase();
+            const memberId = `BC-MEM-${Math.floor(1000 + Math.random() * 9000)}`;
+            const member = {
+              email: cleanEmail,
+              name: name || cleanEmail.split('@')[0],
+              plan: plan || 'Individual Membership ($290 CAD / year)',
+              memberId,
+              status: 'active',
+              joinedAt: new Date().toISOString(),
+            };
+            saveMember(member);
+
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ success: true, member }));
           } catch (err: any) {
             res.statusCode = 500;
             res.setHeader('Content-Type', 'application/json');

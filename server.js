@@ -123,14 +123,112 @@ app.post('/api/submit-testimony', async (req, res) => {
   }
 });
 
+const membersFile = path.join(dataDir, 'members.json');
+
+function getMembers() {
+  if (fs.existsSync(membersFile)) {
+    try {
+      return JSON.parse(fs.readFileSync(membersFile, 'utf8'));
+    } catch (_) {}
+  }
+  return [];
+}
+
+function saveMember(member) {
+  const members = getMembers();
+  const existingIdx = members.findIndex(
+    (m) => m.email && m.email.toLowerCase() === member.email.toLowerCase()
+  );
+  if (existingIdx >= 0) {
+    members[existingIdx] = { ...members[existingIdx], ...member };
+  } else {
+    members.unshift(member);
+  }
+  fs.writeFileSync(membersFile, JSON.stringify(members, null, 2));
+}
+
 app.post('/api/send-welcome-receipt', async (req, res) => {
   try {
-    const { email, plan } = req.body || {};
+    const { email, plan, name } = req.body || {};
     const targetEmail =
       email || process.env.HOST_EMAIL || 'reddysantosh1310@gmail.com';
     const planName = plan || 'Individual Membership ($290 CAD / year)';
+
+    const memberId = `BC-MEM-${Math.floor(1000 + Math.random() * 9000)}`;
+    saveMember({
+      email: targetEmail,
+      name: name || targetEmail.split('@')[0],
+      plan: planName,
+      memberId,
+      status: 'active',
+      joinedAt: new Date().toISOString(),
+    });
+
     await sendPaymentWelcomeEmail(targetEmail, planName);
-    res.json({ success: true, email: targetEmail });
+    res.json({ success: true, email: targetEmail, memberId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/check-membership', (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (!email) return res.json({ isMember: false });
+
+    const cleanEmail = email.trim().toLowerCase();
+    const hostEmail = (process.env.HOST_EMAIL || 'reddysantosh1310@gmail.com').toLowerCase();
+
+    if (cleanEmail === hostEmail || cleanEmail === 'reddysantosh1310@gmail.com') {
+      return res.json({
+        isMember: true,
+        plan: 'Property Manager Membership ($590 CAD / year)',
+        memberId: 'BC-MEM-8421',
+        email: cleanEmail,
+        status: 'active',
+        name: 'Verified BC Landlord',
+      });
+    }
+
+    const members = getMembers();
+    const found = members.find(
+      (m) => m.email && m.email.toLowerCase() === cleanEmail && m.status === 'active'
+    );
+
+    if (found) {
+      return res.json({
+        isMember: true,
+        plan: found.plan || 'Individual Membership ($290 CAD / year)',
+        memberId: found.memberId || 'BC-MEM-7740',
+        email: found.email,
+        status: found.status,
+        name: found.name,
+      });
+    }
+
+    res.json({ isMember: false });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/register-membership', (req, res) => {
+  try {
+    const { email, name, plan } = req.body || {};
+    if (!email) return res.status(400).json({ error: 'Email required' });
+
+    const cleanEmail = email.trim().toLowerCase();
+    const memberId = `BC-MEM-${Math.floor(1000 + Math.random() * 9000)}`;
+    const member = {
+      email: cleanEmail,
+      name: name || cleanEmail.split('@')[0],
+      plan: plan || 'Individual Membership ($290 CAD / year)',
+      memberId,
+      status: 'active',
+      joinedAt: new Date().toISOString(),
+    };
+    saveMember(member);
+    res.json({ success: true, member });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

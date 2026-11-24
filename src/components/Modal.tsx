@@ -12,6 +12,11 @@ declare global {
 interface ModalProps {
   modalState: ModalState;
   onClose: () => void;
+  isMember?: boolean;
+  googleUser?: GoogleUserProfile | null;
+  onGoogleSignIn?: () => void;
+  onGoogleDisconnect?: () => void;
+  onOpenMemberDashboard?: () => void;
 }
 
 interface GoogleUserProfile {
@@ -26,13 +31,23 @@ const STRIPE_CHECKOUT_LINKS: Record<string, string> = {
   custom: 'https://buy.stripe.com/test_14A00i5i41XN05x3RQgw000',
 };
 
-export const Modal: React.FC<ModalProps> = ({ modalState, onClose }) => {
+export const Modal: React.FC<ModalProps> = ({
+  modalState,
+  onClose,
+  isMember = false,
+  googleUser: externalGoogleUser,
+  onGoogleSignIn: externalGoogleSignIn,
+  onGoogleDisconnect: externalGoogleDisconnect,
+  onOpenMemberDashboard,
+}) => {
   const { isOpen, type, storyId, planChoice = 'individual' } = modalState;
 
   const [selectedPlan, setSelectedPlan] = useState(planChoice);
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [googleUser, setGoogleUser] = useState<GoogleUserProfile | null>(null);
+  const [internalGoogleUser, setInternalGoogleUser] = useState<GoogleUserProfile | null>(null);
+
+  const googleUser = externalGoogleUser !== undefined ? externalGoogleUser : internalGoogleUser;
 
   // Testimony form fields
   const [alias, setAlias] = useState('');
@@ -48,6 +63,12 @@ export const Modal: React.FC<ModalProps> = ({ modalState, onClose }) => {
   }, [planChoice]);
 
   useEffect(() => {
+    if (googleUser?.email) {
+      setEmail(googleUser.email);
+    }
+  }, [googleUser]);
+
+  useEffect(() => {
     setFormSubmitted(false);
     setIsRedirecting(false);
     setAssignedRecordId(null);
@@ -55,17 +76,18 @@ export const Modal: React.FC<ModalProps> = ({ modalState, onClose }) => {
 
   // Load existing Google authentication from storage if available
   useEffect(() => {
+    if (externalGoogleUser !== undefined) return;
     const saved = localStorage.getItem('landlords_google_user');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (parsed && parsed.email) {
-          setGoogleUser(parsed);
+          setInternalGoogleUser(parsed);
           setEmail(parsed.email);
         }
       } catch (_) {}
     }
-  }, []);
+  }, [externalGoogleUser]);
 
   // Initialize official Google Identity Services SDK if configured
   useEffect(() => {
@@ -97,7 +119,7 @@ export const Modal: React.FC<ModalProps> = ({ modalState, onClose }) => {
                   name: payload.name || payload.email.split('@')[0],
                   picture: payload.picture,
                 };
-                setGoogleUser(user);
+                setInternalGoogleUser(user);
                 setEmail(user.email);
                 localStorage.setItem('landlords_google_user', JSON.stringify(user));
               } catch (err) {
@@ -125,6 +147,11 @@ export const Modal: React.FC<ModalProps> = ({ modalState, onClose }) => {
   if (!isOpen || !type) return null;
 
   const handleGoogleSignIn = () => {
+    if (externalGoogleSignIn) {
+      externalGoogleSignIn();
+      return;
+    }
+
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     const isRealClientId =
       clientId &&
@@ -156,14 +183,17 @@ export const Modal: React.FC<ModalProps> = ({ modalState, onClose }) => {
         name: derivedName,
         email: cleanEmail,
       };
-      setGoogleUser(mockUser);
+      setInternalGoogleUser(mockUser);
       setEmail(mockUser.email);
       localStorage.setItem('landlords_google_user', JSON.stringify(mockUser));
     }
   };
 
   const handleGoogleDisconnect = () => {
-    setGoogleUser(null);
+    if (externalGoogleDisconnect) {
+      externalGoogleDisconnect();
+    }
+    setInternalGoogleUser(null);
     localStorage.removeItem('landlords_google_user');
   };
 
@@ -398,9 +428,84 @@ export const Modal: React.FC<ModalProps> = ({ modalState, onClose }) => {
           {/* Membership Stripe Checkout Modal */}
           {type === 'membership' && (
             <>
-              <p>
-                Join confidentially to access all BC RTA legal kits, condition inspection workflows, and direct helpline support.
-              </p>
+              {isMember ? (
+                <div
+                  style={{
+                    margin: '12px 0 8px',
+                    padding: '24px 20px',
+                    borderRadius: '18px',
+                    background: 'rgba(30, 65, 40, 0.08)',
+                    border: '1px solid rgba(43, 107, 56, 0.28)',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '46px',
+                      height: '46px',
+                      borderRadius: '50%',
+                      background: '#1e4128',
+                      color: '#f6f0e7',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '22px',
+                      marginBottom: '12px',
+                    }}
+                  >
+                    ✓
+                  </div>
+                  <h4 style={{ margin: '0 0 6px', fontSize: '18px', color: '#1e4128', fontWeight: 700 }}>
+                    Active Membership Identified!
+                  </h4>
+                  <p style={{ margin: '0 0 6px', fontSize: '14px', color: '#2a4430', lineHeight: 1.5 }}>
+                    Welcome back, <strong>{googleUser?.name || 'Verified Landlord Member'}</strong>!
+                  </p>
+                  <div
+                    style={{
+                      display: 'inline-block',
+                      margin: '6px 0 14px',
+                      padding: '4px 14px',
+                      borderRadius: '999px',
+                      background: '#d4ecd7',
+                      color: '#1e4128',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {localStorage.getItem('pending_checkout_plan') || 'Property Manager Plan ($590 CAD / year)'} · Active
+                  </div>
+                  <p style={{ fontSize: '12.5px', color: '#556b5b', margin: '0 0 18px' }}>
+                    Linked account: <strong>{googleUser?.email || localStorage.getItem('pending_checkout_email')}</strong>
+                  </p>
+                  <button
+                    type="button"
+                    className="btn-dark"
+                    style={{
+                      width: '100%',
+                      background: '#1e4128',
+                      color: '#f6f0e7',
+                      padding: '13px 20px',
+                      borderRadius: '999px',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      border: 'none',
+                      boxShadow: '0 4px 14px rgba(30, 65, 40, 0.25)',
+                    }}
+                    onClick={() => {
+                      onClose();
+                      if (onOpenMemberDashboard) onOpenMemberDashboard();
+                    }}
+                  >
+                    Open Member Dashboard &amp; Legal Vault →
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <p>
+                    Join confidentially to access all BC RTA legal kits, condition inspection workflows, and direct helpline support.
+                  </p>
 
               {/* Google Authentication Section */}
               <div style={{ marginTop: '14px', marginBottom: '14px' }}>
@@ -657,6 +762,8 @@ export const Modal: React.FC<ModalProps> = ({ modalState, onClose }) => {
               </form>
             </>
           )}
+        </>
+      )}
         </div>
       </div>
     </div>
