@@ -9,6 +9,7 @@ import { ResourcesModal } from './components/ResourcesModal';
 import { EventsNewsModal } from './components/EventsNewsModal';
 import { PolicyModal } from './components/PolicyModal';
 import { MemberDashboardModal } from './components/MemberDashboardModal';
+import { MemberDashboardPage } from './components/MemberDashboardPage';
 import { useLenis } from './hooks/useLenis';
 import { useScrollReveal } from './hooks/useScrollReveal';
 import { ModalState } from './types';
@@ -36,6 +37,40 @@ export default function App() {
     title: string;
     message: string;
   } | null>(null);
+
+  const [currentView, setCurrentView] = useState<'home' | 'dashboard'>(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname.toLowerCase();
+      const params = new URLSearchParams(window.location.search);
+      if (path === '/dashboard' || params.get('page') === 'dashboard') {
+        return 'dashboard';
+      }
+    }
+    return 'home';
+  });
+
+  const navigateTo = (view: 'home' | 'dashboard') => {
+    setCurrentView(view);
+    const targetPath = view === 'dashboard' ? '/dashboard' : '/';
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState(null, '', targetPath);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname.toLowerCase();
+      const params = new URLSearchParams(window.location.search);
+      if (path === '/dashboard' || params.get('page') === 'dashboard') {
+        setCurrentView('dashboard');
+      } else {
+        setCurrentView('home');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const { scrollTo } = useLenis(modalState.isOpen);
   useScrollReveal();
@@ -151,10 +186,7 @@ export default function App() {
       setTimeout(() => setMembershipNotification(null), 6000);
 
       if (autoOpenDashboard) {
-        setModalState({
-          isOpen: true,
-          type: 'member-dashboard',
-        });
+        navigateTo('dashboard');
       }
       return true;
     }
@@ -379,10 +411,7 @@ export default function App() {
   };
 
   const handleOpenMemberDashboard = () => {
-    setModalState({
-      isOpen: true,
-      type: 'member-dashboard',
-    });
+    navigateTo('dashboard');
   };
 
   const handleOpenPolicy = (policyId: string) => {
@@ -406,6 +435,7 @@ export default function App() {
     setIsMember(false);
     setGoogleUser(null);
     handleCloseModal();
+    navigateTo('home');
     setMembershipNotification({
       title: 'Signed Out',
       message: 'You have signed out of your Landlords BC member session.',
@@ -514,38 +544,49 @@ export default function App() {
         </div>
       )}
 
-      <Navbar
-        onNavigate={handleNavigate}
-        onOpenMembership={handleOpenMembership}
-        onOpenResources={handleOpenResources}
-        onOpenMemberDashboard={handleOpenMemberDashboard}
-        isMember={isMember}
-        googleUser={googleUser}
-        onGoogleSignIn={handleGoogleSignIn}
-      />
-
-      <main>
-        <Hero
-          isMember={isMember}
-          googleUser={googleUser}
-          onOpenMemberDashboard={handleOpenMemberDashboard}
-          onOpenMembership={handleOpenMembership}
+      {currentView === 'dashboard' ? (
+        <MemberDashboardPage
+          onBackToHome={() => navigateTo('home')}
+          onSignOut={handleSignOut}
+          onOpenResourcesModal={handleOpenResources}
+          onOpenMembershipModal={handleOpenMembership}
         />
-        <BentoSection
-          onOpenStory={handleOpenStory}
-          onSubmitStory={handleOpenStorySubmit}
-          onOpenResources={handleOpenResources}
-        />
-        <MembershipPricing onSelectPlan={handleOpenMembership} />
-      </main>
+      ) : (
+        <>
+          <Navbar
+            onNavigate={handleNavigate}
+            onOpenMembership={handleOpenMembership}
+            onOpenResources={handleOpenResources}
+            onOpenMemberDashboard={handleOpenMemberDashboard}
+            isMember={isMember}
+            googleUser={googleUser}
+            onGoogleSignIn={handleGoogleSignIn}
+          />
 
-      <ContactFooter
-        onNavigate={handleNavigate}
-        onSubmitStory={handleOpenStorySubmit}
-        onOpenResources={handleOpenResources}
-        onOpenEventsNews={handleOpenEventsNews}
-        onOpenPolicy={handleOpenPolicy}
-      />
+          <main>
+            <Hero
+              isMember={isMember}
+              googleUser={googleUser}
+              onOpenMemberDashboard={handleOpenMemberDashboard}
+              onOpenMembership={handleOpenMembership}
+            />
+            <BentoSection
+              onOpenStory={handleOpenStory}
+              onSubmitStory={handleOpenStorySubmit}
+              onOpenResources={handleOpenResources}
+            />
+            <MembershipPricing onSelectPlan={handleOpenMembership} />
+          </main>
+
+          <ContactFooter
+            onNavigate={handleNavigate}
+            onSubmitStory={handleOpenStorySubmit}
+            onOpenResources={handleOpenResources}
+            onOpenEventsNews={handleOpenEventsNews}
+            onOpenPolicy={handleOpenPolicy}
+          />
+        </>
+      )}
 
       {/* Core Hardship & Enrollment Modals */}
       <Modal
