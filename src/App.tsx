@@ -314,8 +314,10 @@ export default function App() {
       setIsMember(true);
       localStorage.setItem('landlords_member', 'true');
 
+      const sessionId = params.get('session_id');
+
       // Determine email to receive receipt
-      const emailToSend =
+      const fallbackEmail =
         localStorage.getItem('pending_checkout_email') ||
         (() => {
           try {
@@ -326,7 +328,7 @@ export default function App() {
             return null;
           }
         })() ||
-        'reddysantosh1310@gmail.com';
+        '';
 
       const planName =
         localStorage.getItem('pending_checkout_plan') ||
@@ -335,33 +337,34 @@ export default function App() {
         localStorage.getItem('landlords_member_id') ||
         `BC-MEM-${Math.floor(1000 + Math.random() * 9000)}`;
 
-      // Save to local registry
-      try {
-        const registry = JSON.parse(
-          localStorage.getItem('landlords_members_registry') || '{}'
-        );
-        registry[emailToSend.toLowerCase()] = {
-          email: emailToSend,
-          plan: planName,
-          memberId,
-          status: 'active',
-          joinedAt: new Date().toISOString(),
-        };
-        localStorage.setItem(
-          'landlords_members_registry',
-          JSON.stringify(registry)
-        );
-      } catch (_) {}
-
-      // Register with server
-      fetch('/api/register-membership', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailToSend, plan: planName }),
-      }).catch(() => {});
-
-      setConfirmedEmail(emailToSend);
-      triggerWelcomeEmail(emailToSend);
+      if (sessionId) {
+        // Query Stripe directly to retrieve the exact customer email entered at Checkout & trigger welcome email
+        fetch('/api/confirm-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId }),
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            const actualEmail = data.email || fallbackEmail;
+            if (actualEmail) {
+              setConfirmedEmail(actualEmail);
+              localStorage.setItem('pending_checkout_email', actualEmail);
+              if (data.plan) localStorage.setItem('pending_checkout_plan', data.plan);
+              if (data.memberId) localStorage.setItem('landlords_member_id', data.memberId);
+            }
+          })
+          .catch((err) => {
+            console.warn('[Confirm Session API Warning]:', err);
+            if (fallbackEmail) {
+              setConfirmedEmail(fallbackEmail);
+              triggerWelcomeEmail(fallbackEmail);
+            }
+          });
+      } else if (fallbackEmail) {
+        setConfirmedEmail(fallbackEmail);
+        triggerWelcomeEmail(fallbackEmail);
+      }
 
       // Clean up URL parameters without refresh
       window.history.replaceState({}, document.title, window.location.pathname);

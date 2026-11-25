@@ -19,7 +19,7 @@ function getMembers(): any[] {
   if (fs.existsSync(membersFile)) {
     try {
       return JSON.parse(fs.readFileSync(membersFile, 'utf8'));
-    } catch (_) {}
+    } catch (_) { }
   }
   return [];
 }
@@ -76,36 +76,50 @@ export function stripePlugin() {
             }
 
             const stripe = new Stripe(secretKey);
-            const { plan, email, returnUrl } = JSON.parse(body || '{}');
+            const {
+              plan = 'individual',
+              email,
+              returnUrl,
+              interval = 'year',
+              billingType = 'recurring',
+            } = JSON.parse(body || '{}');
 
             const origin =
               returnUrl || req.headers.origin || 'http://localhost:3000';
 
+            const isMonthly = interval === 'month';
+            const isSubscription = billingType === 'recurring';
+
             const planDetails: Record<
               string,
-              { name: string; amount: number; description: string }
+              { name: string; amount: number; monthlyAmount: number; description: string }
             > = {
               individual: {
                 name: 'Landlords BC — Individual Membership',
-                amount: 29000, // $290.00 CAD
+                amount: 29000, // $290.00 CAD / year
+                monthlyAmount: 2900, // $29.00 CAD / month
                 description:
-                  'Annual self-managing landlord membership & confidential defense under the BC RTA.',
+                  'Self-managing landlord membership & confidential defense under the BC RTA.',
               },
               'property-manager': {
                 name: 'Landlords BC — Property Manager Membership',
-                amount: 59000, // $590.00 CAD
+                amount: 59000, // $590.00 CAD / year
+                monthlyAmount: 5900, // $59.00 CAD / month
                 description:
-                  'Annual professional property manager tier with multi-unit records and advocacy reporting.',
+                  'Professional property manager tier with multi-unit records and advocacy reporting.',
               },
               custom: {
                 name: 'Landlords BC — Custom Portfolio Membership',
-                amount: 99000, // $990.00 CAD
+                amount: 99000, // $990.00 CAD / year
+                monthlyAmount: 9900, // $99.00 CAD / month
                 description:
                   'Bespoke multi-unit portfolio regulatory support & private helpline priority.',
               },
             };
 
             const selected = planDetails[plan] || planDetails.individual;
+            const unitAmount = isMonthly ? selected.monthlyAmount : selected.amount;
+            const intervalLabel = isMonthly ? 'Monthly' : 'Annual';
 
             // Find or create customer to bind the payment to their persistent Stripe profile
             let customerId: string | undefined;
@@ -126,24 +140,49 @@ export function stripePlugin() {
               }
             }
 
-            const session = await stripe.checkout.sessions.create({
+            const sessionParams: Stripe.Checkout.SessionCreateParams = {
               line_items: [
                 {
                   price_data: {
                     currency: 'cad',
                     product_data: {
-                      name: selected.name,
-                      description: selected.description,
+                      name: `${selected.name} (${intervalLabel})`,
+                      description: `${selected.description} · 100% Tax Deductible (CRA Form T776 Line 8810)`,
                     },
-                    unit_amount: selected.amount,
+                    unit_amount: unitAmount,
+                    ...(isSubscription
+                      ? {
+                          recurring: {
+                            interval: isMonthly ? 'month' : 'year',
+                          },
+                        }
+                      : {}),
                   },
                   quantity: 1,
                 },
               ],
-              mode: 'payment',
+              mode: isSubscription ? 'subscription' : 'payment',
               customer: customerId,
-              customer_email: customerId ? undefined : (email && email.includes('@') ? email : undefined),
-              invoice_creation: {
+              customer_email: customerId ? undefined : email && email.includes('@') ? email : undefined,
+              metadata: {
+                plan,
+                interval: isMonthly ? 'month' : 'year',
+                source: 'landlords-bc',
+              },
+              success_url: `${origin}/?status=success&session_id={CHECKOUT_SESSION_ID}`,
+              cancel_url: `${origin}/?status=cancelled`,
+            };
+
+            if (isSubscription) {
+              sessionParams.subscription_data = {
+                description: `${selected.name} (${intervalLabel}) · 100% Tax Deductible (CRA Form T776 Line 8810)`,
+                metadata: {
+                  plan,
+                  interval: isMonthly ? 'month' : 'year',
+                },
+              };
+            } else {
+              sessionParams.invoice_creation = {
                 enabled: true,
                 invoice_data: {
                   description: `${selected.name} · 100% Tax Deductible (CRA Form T776 Line 8810)`,
@@ -152,21 +191,21 @@ export function stripePlugin() {
                     { name: 'Jurisdiction', value: 'British Columbia, Canada' },
                   ],
                 },
-              },
-              success_url: `${origin}/?status=success&session_id={CHECKOUT_SESSION_ID}`,
-              cancel_url: `${origin}/?status=cancelled`,
-            });
-
-            // Dispatch welcome confirmation email asynchronously if email provided
-            if (email && email.includes('@')) {
-              sendPaymentWelcomeEmail(email, selected.name).catch((e) =>
-                console.error('[Welcome Email Error]:', e.message)
-              );
+              };
             }
+
+            const session = await stripe.checkout.sessions.create(sessionParams);
 
             res.statusCode = 200;
             res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify({ url: session.url }));
+            res.end(
+              JSON.stringify({
+                url: session.url,
+                sessionId: session.id,
+                mode: sessionParams.mode,
+                interval: isMonthly ? 'month' : 'year',
+              })
+            );
           } catch (error: any) {
             console.error('Stripe Checkout Error:', error);
             res.statusCode = 500;
@@ -250,7 +289,7 @@ export function stripePlugin() {
               email || process.env.HOST_EMAIL || 'reddysantosh1310@gmail.com';
             const planName =
               plan || 'Individual Membership ($290 CAD / year)';
-            
+
             // Record as active member
             const memberId = `BC-MEM-${Math.floor(1000 + Math.random() * 9000)}`;
             saveMember({
@@ -267,6 +306,97 @@ export function stripePlugin() {
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify({ success: true, email: targetEmail, memberId }));
           } catch (err: any) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: err.message }));
+          }
+        });
+      });
+
+      // 3.5 Confirm Checkout Session & Send Welcome Email to Real Customer
+      server.middlewares.use('/api/confirm-session', async (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405;
+          res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+          return;
+        }
+
+        let body = '';
+        req.on('data', (chunk) => {
+          body += chunk;
+        });
+
+        req.on('end', async () => {
+          try {
+            const { sessionId } = JSON.parse(body || '{}');
+            const secretKey = process.env.STRIPE_SECRET_KEY;
+            if (!secretKey) {
+              res.statusCode = 400;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ error: 'STRIPE_SECRET_KEY is not configured' }));
+              return;
+            }
+
+            const stripe = new Stripe(secretKey);
+            if (!sessionId) {
+              res.statusCode = 400;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ error: 'sessionId is required' }));
+              return;
+            }
+
+            const session = await stripe.checkout.sessions.retrieve(sessionId, {
+              expand: ['line_items', 'customer'],
+            });
+
+            const customerEmail =
+              session.customer_details?.email ||
+              (session.customer as any)?.email ||
+              session.customer_email;
+
+            const customerName =
+              session.customer_details?.name ||
+              (session.customer as any)?.name ||
+              (customerEmail ? customerEmail.split('@')[0] : 'Verified Landlord');
+
+            const planName =
+              session.line_items?.data[0]?.description ||
+              session.metadata?.plan ||
+              'Landlords BC Annual Membership';
+
+            const memberId = `BC-MEM-${session.id.slice(-4).toUpperCase()}`;
+
+            let emailDispatched = false;
+            if (customerEmail && customerEmail.includes('@')) {
+              saveMember({
+                email: customerEmail.trim().toLowerCase(),
+                name: customerName,
+                plan: planName,
+                memberId,
+                status: 'active',
+                joinedAt: new Date().toISOString(),
+              });
+
+              // Dispatch real welcome email to the paying user
+              emailDispatched = await sendPaymentWelcomeEmail(customerEmail.trim(), planName);
+              console.log(`[Confirm Session] Welcome email status for ${customerEmail}: ${emailDispatched}`);
+            }
+
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(
+              JSON.stringify({
+                success: true,
+                email: customerEmail,
+                name: customerName,
+                plan: planName,
+                memberId,
+                emailDispatched,
+                paymentStatus: session.payment_status,
+              })
+            );
+          } catch (err: any) {
+            console.error('[Confirm Session Error]:', err.message);
             res.statusCode = 500;
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify({ error: err.message }));

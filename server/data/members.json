@@ -1,26 +1,34 @@
 [
   {
-    "email": "manoj.ardenttech@gmail.com",
-    "name": "manoj.ardenttech",
-    "plan": "Property Manager Membership ($590 CAD / year)",
-    "memberId": "BC-MEM-IV5E",
+    "email": "test@mail.com",
+    "name": "test",
+    "plan": "individual",
+    "memberId": "BC-MEM-5860",
     "status": "active",
-    "joinedAt": "2026-11-25T15:08:37.000Z"
+    "joinedAt": "2026-11-25T16:37:14.249Z"
+  },
+  {
+    "email": "manoj.ardenttech@gmail.com",
+    "name": "manoj",
+    "plan": "Landlords BC — Property Manager Membership",
+    "memberId": "BC-MEM-MUF7",
+    "status": "active",
+    "joinedAt": "2026-11-25T16:54:19.317Z"
   },
   {
     "email": "reddysantoshh@gmail.com",
-    "name": "reddysantoshh",
-    "plan": "Individual Membership ($290 CAD / year)",
-    "memberId": "BC-MEM-ZQG9",
+    "name": "SK",
+    "plan": "Landlords BC — Individual Membership",
+    "memberId": "BC-MEM-71OL",
     "status": "active",
-    "joinedAt": "2026-11-25T11:07:44.000Z"
+    "joinedAt": "2026-11-25T16:54:32.415Z"
   },
   {
     "email": "reddysantosh1310@gmail.com",
-    "name": "Reddy Santosh Kumar",
-    "plan": "Property Manager Membership ($590 CAD / year)",
-    "memberId": "BC-MEM-8421",
+    "name": "reddysantosh1310",
+    "plan": "Individual Membership ( CAD / year)",
+    "memberId": "BC-MEM-2313",
     "status": "active",
-    "joinedAt": "2026-10-01T00:00:00.000Z"
+    "joinedAt": "2026-11-25T16:49:16.187Z"
   }
 ]

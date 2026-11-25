@@ -26,34 +26,45 @@ export default async function handler(req, res) {
     }
 
     const stripe = new Stripe(secretKey);
-    const { plan, email, returnUrl } = req.body || {};
+    const {
+      plan = 'individual',
+      email,
+      returnUrl,
+      interval = 'year', // 'month' or 'year'
+      billingType = 'recurring', // 'recurring' (subscription) or 'one_time'
+    } = req.body || {};
+
     const protocol = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers['x-forwarded-host'] || req.headers.host;
-    const origin =
-      returnUrl || req.headers.origin || `${protocol}://${host}`;
+    const origin = returnUrl || req.headers.origin || `${protocol}://${host}`;
+
+    const isMonthly = interval === 'month';
+    const isSubscription = billingType === 'recurring';
 
     const planDetails = {
       individual: {
         name: 'Landlords BC — Individual Membership',
-        amount: 29000, // $290.00 CAD
-        description:
-          'Annual self-managing landlord membership & confidential defense under the BC RTA.',
+        amount: 29000, // $290.00 CAD / year
+        monthlyAmount: 2900, // $29.00 CAD / month
+        description: 'Self-managing landlord membership & confidential defense under the BC RTA.',
       },
       'property-manager': {
         name: 'Landlords BC — Property Manager Membership',
-        amount: 59000, // $590.00 CAD
-        description:
-          'Annual professional property manager tier with multi-unit records and advocacy reporting.',
+        amount: 59000, // $590.00 CAD / year
+        monthlyAmount: 5900, // $59.00 CAD / month
+        description: 'Professional property manager tier with multi-unit records and advocacy reporting.',
       },
       custom: {
         name: 'Landlords BC — Custom Portfolio Membership',
-        amount: 99000, // $990.00 CAD
-        description:
-          'Bespoke multi-unit portfolio regulatory support & private helpline priority.',
+        amount: 99000, // $990.00 CAD / year
+        monthlyAmount: 9900, // $99.00 CAD / month
+        description: 'Bespoke multi-unit portfolio regulatory support & private helpline priority.',
       },
     };
 
     const selected = planDetails[plan] || planDetails.individual;
+    const unitAmount = isMonthly ? selected.monthlyAmount : selected.amount;
+    const intervalLabel = isMonthly ? 'Monthly' : 'Annual';
 
     // Find or create customer to bind the payment to their persistent Stripe profile
     let customerId;
@@ -74,24 +85,49 @@ export default async function handler(req, res) {
       }
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams = {
       line_items: [
         {
           price_data: {
             currency: 'cad',
             product_data: {
-              name: selected.name,
-              description: selected.description,
+              name: `${selected.name} (${intervalLabel})`,
+              description: `${selected.description} · 100% Tax Deductible (CRA Form T776 Line 8810)`,
             },
-            unit_amount: selected.amount,
+            unit_amount: unitAmount,
+            ...(isSubscription
+              ? {
+                  recurring: {
+                    interval: isMonthly ? 'month' : 'year',
+                  },
+                }
+              : {}),
           },
           quantity: 1,
         },
       ],
-      mode: 'payment',
+      mode: isSubscription ? 'subscription' : 'payment',
       customer: customerId,
-      customer_email: customerId ? undefined : (email && email.includes('@') ? email : undefined),
-      invoice_creation: {
+      customer_email: customerId ? undefined : email && email.includes('@') ? email : undefined,
+      metadata: {
+        plan,
+        interval: isMonthly ? 'month' : 'year',
+        source: 'landlords-bc',
+      },
+      success_url: `${origin}/?status=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/?status=cancelled`,
+    };
+
+    if (isSubscription) {
+      sessionParams.subscription_data = {
+        description: `${selected.name} (${intervalLabel}) · 100% Tax Deductible (CRA Form T776 Line 8810)`,
+        metadata: {
+          plan,
+          interval: isMonthly ? 'month' : 'year',
+        },
+      };
+    } else {
+      sessionParams.invoice_creation = {
         enabled: true,
         invoice_data: {
           description: `${selected.name} · 100% Tax Deductible (CRA Form T776 Line 8810)`,
@@ -100,12 +136,17 @@ export default async function handler(req, res) {
             { name: 'Jurisdiction', value: 'British Columbia, Canada' },
           ],
         },
-      },
-      success_url: `${origin}/?status=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/?status=cancelled`,
-    });
+      };
+    }
 
-    return res.status(200).json({ url: session.url });
+    const session = await stripe.checkout.sessions.create(sessionParams);
+
+    return res.status(200).json({
+      url: session.url,
+      sessionId: session.id,
+      mode: sessionParams.mode,
+      interval: isMonthly ? 'month' : 'year',
+    });
   } catch (error) {
     console.error('Stripe Checkout Error:', error);
     return res.status(500).json({
