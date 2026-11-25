@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 
-export function useScrollReveal() {
+export function useScrollReveal(activeDependency?: any) {
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isMobile = window.innerWidth <= 900;
 
     // 1) Split headings into words, keeping nested spans and <br>
     document.querySelectorAll('[data-split]').forEach((el) => {
@@ -41,7 +42,7 @@ export function useScrollReveal() {
     const countUp = (el: HTMLElement) => {
       const end = +(el.dataset.count || 0);
       const t0 = performance.now();
-      const dur = prefersReducedMotion ? 1 : 2000;
+      const dur = prefersReducedMotion || isMobile ? 1 : 2000;
       const tick = (t: number) => {
         const p = Math.min(1, (t - t0) / dur);
         el.textContent = String(Math.round(end * (1 - Math.pow(1 - p, 4))));
@@ -62,6 +63,13 @@ export function useScrollReveal() {
     };
 
     const targets = document.querySelectorAll('.rv, [data-split]');
+
+    // If mobile or reduced motion, instantly reveal everything with zero lag
+    if (isMobile || prefersReducedMotion) {
+      targets.forEach((el) => reveal(el));
+      return;
+    }
+
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
@@ -71,7 +79,7 @@ export function useScrollReveal() {
           }
         });
       },
-      { threshold: 0.08, rootMargin: '0px 0px -6% 0px' }
+      { threshold: 0.05, rootMargin: '0px 0px 50px 0px' }
     );
 
     targets.forEach((el) => io.observe(el));
@@ -79,19 +87,34 @@ export function useScrollReveal() {
     const sweep = () => {
       targets.forEach((el) => {
         const r = el.getBoundingClientRect();
-        if (r.top < window.innerHeight * 0.94 && r.bottom > 0) {
+        if (r.top < window.innerHeight * 0.98 && r.bottom > -50) {
           reveal(el);
         }
       });
     };
 
-    requestAnimationFrame(() => requestAnimationFrame(sweep));
+    requestAnimationFrame(() => {
+      requestAnimationFrame(sweep);
+    });
+
+    // Fail-safe: After 400ms, ensure all above-fold elements are revealed so nothing is ever stuck invisible
+    const safetyTimer = setTimeout(() => {
+      sweep();
+      // Reveal the first 5 elements unconditionally
+      targets.forEach((el, index) => {
+        if (index < 6) reveal(el);
+      });
+    }, 350);
+
     window.addEventListener('load', sweep);
+    window.addEventListener('scroll', sweep, { passive: true });
 
     return () => {
       io.disconnect();
+      clearTimeout(safetyTimer);
       window.removeEventListener('load', sweep);
+      window.removeEventListener('scroll', sweep);
     };
-  }, []);
+  }, [activeDependency]);
 }
 

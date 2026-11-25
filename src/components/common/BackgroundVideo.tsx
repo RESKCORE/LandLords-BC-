@@ -16,6 +16,14 @@ export const BackgroundVideo: React.FC<BackgroundVideoProps> = ({ id, src, poste
     const still = imgRef.current;
     if (!video) return;
 
+    // On smaller screens/mobile, prevent heavy concurrent video streams to eliminate lag
+    if (window.innerWidth <= 768) {
+      if (still) {
+        still.style.opacity = '1';
+      }
+      return;
+    }
+
     video.src = src;
 
     const handlePlaying = () => {

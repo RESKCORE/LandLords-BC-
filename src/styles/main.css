@@ -71,6 +71,26 @@
         transform: translate3d(0, 0, 0);
       }
 
+      /* Mobile & Tablet Performance: eliminate compositing layer strain and ensure instantaneous visibility */
+      @media (max-width: 900px) {
+        .js .rv,
+        .rv {
+          opacity: 1 !important;
+          transform: none !important;
+          will-change: auto !important;
+          transition: none !important;
+        }
+        .js .rv-scale {
+          transform: none !important;
+        }
+        .js .split .w > span {
+          transform: none !important;
+          opacity: 1 !important;
+          will-change: auto !important;
+          transition: none !important;
+        }
+      }
+
       /* split headings: every word is .w > span */
       .split .w {
         display: inline-block;

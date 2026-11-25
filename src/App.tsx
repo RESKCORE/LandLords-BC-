@@ -73,7 +73,7 @@ export default function App() {
   }, []);
 
   const { scrollTo } = useLenis(modalState.isOpen);
-  useScrollReveal();
+  useScrollReveal(currentView);
 
   const triggerWelcomeEmail = async (targetEmail: string) => {
     try {

@@ -952,6 +952,107 @@ Tenant 5-Day Dispute Window Closes: ${formatDate(disputeDeadlineDate)}
             )}
           </section>
 
+          {/* Member Subscription Plan & Coverage Details */}
+          <section
+            style={{
+              background: '#ffffff',
+              borderRadius: '20px',
+              border: '1.5px solid rgba(42, 26, 18, 0.12)',
+              padding: '24px 28px',
+              marginBottom: '28px',
+              boxShadow: '0 4px 20px rgba(42, 26, 18, 0.05)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '20px',
+            }}
+          >
+            <div style={{ flex: '1 1 340px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                <span
+                  style={{
+                    background: 'rgba(46, 107, 59, 0.12)',
+                    color: '#2e6b3b',
+                    padding: '3px 10px',
+                    borderRadius: '999px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                  }}
+                >
+                  ● Active Subscription Plan
+                </span>
+                <span style={{ fontSize: '12px', color: '#8c7b6f' }}>
+                  Annual CAD Billing · Auto-Renew Active
+                </span>
+              </div>
+              <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#2a1a12', margin: '2px 0 6px' }}>
+                {membershipPlan}
+              </h2>
+              <p style={{ fontSize: '13.5px', color: '#5b4a3f', margin: 0, lineHeight: 1.5 }}>
+                Full statutory coverage under the BC Residential Tenancy Act (RTA), including 1-800-555-0199 priority advisor helpline, official RTB evidence indexing, pre-formatted legal kits, and private documentation vault.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <div
+                style={{
+                  background: 'rgba(246, 240, 231, 0.8)',
+                  border: '1px solid rgba(42, 26, 18, 0.08)',
+                  padding: '12px 18px',
+                  borderRadius: '12px',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ fontSize: '10px', textTransform: 'uppercase', color: '#8c7b6f', fontWeight: 600 }}>
+                  Billing Currency
+                </div>
+                <div style={{ fontSize: '16px', fontWeight: 800, color: '#2a1a12' }}>
+                  CAD ($)
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: 'rgba(246, 240, 231, 0.8)',
+                  border: '1px solid rgba(42, 26, 18, 0.08)',
+                  padding: '12px 18px',
+                  borderRadius: '12px',
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ fontSize: '10px', textTransform: 'uppercase', color: '#8c7b6f', fontWeight: 600 }}>
+                  Membership Status
+                </div>
+                <div style={{ fontSize: '16px', fontWeight: 800, color: '#2e6b3b' }}>
+                  Verified Active ✓
+                </div>
+              </div>
+
+              {onOpenMembershipModal && (
+                <button
+                  type="button"
+                  onClick={() => onOpenMembershipModal('property-manager')}
+                  style={{
+                    background: 'rgba(42, 26, 18, 0.06)',
+                    border: '1px solid rgba(42, 26, 18, 0.12)',
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: '#3b2116',
+                    cursor: 'pointer',
+                  }}
+                  title="Upgrade or manage plan tier"
+                >
+                  Manage Tier
+                </button>
+              )}
+            </div>
+          </section>
+
           {/* 3 Pillar Summary Cards */}
           <section
             style={{

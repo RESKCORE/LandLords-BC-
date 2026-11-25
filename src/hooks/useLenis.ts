@@ -6,14 +6,16 @@ export function useLenis(isModalOpen: boolean) {
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) return;
+    const isMobile = window.innerWidth <= 900 || window.matchMedia('(pointer: coarse)').matches;
+    // On mobile and touch devices, native 120Hz smooth momentum scroll is superior and prevents touch lag
+    if (prefersReducedMotion || isMobile) return;
 
     const lenis = new Lenis({
       lerp: 0.09,
       smoothWheel: true,
       wheelMultiplier: 1,
-      touchMultiplier: 1.5,
-      syncTouch: true,
+      touchMultiplier: 1.2,
+      syncTouch: false,
     });
     lenisRef.current = lenis;
 
