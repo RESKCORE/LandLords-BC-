@@ -1,6 +1,8 @@
 export const CONTACT_INFO = {
-  phone: '1-800-555-0199',
-  phoneHref: 'tel:+18005550199',
+  phone: '1-888-330-6707',
+  phoneDisplay: '1-888-330-6707',
+  phoneHours: 'Mon–Fri, 9:00 AM – 4:30 PM PT',
+  phoneHref: 'tel:+18883306707',
   helpEmail: 'support@landlordsbc.org',
   privacyEmail: 'privacy@landlordsbc.org',
 };

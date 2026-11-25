@@ -72,6 +72,18 @@ export const FORMS_CATALOGUE: FormItem[] = [
     link: 'https://www2.gov.bc.ca/assets/gov/housing-and-tenancy/residential-tenancies/forms/rtb7.pdf',
     isExternal: true,
   },
+  {
+    id: 'rtb-33',
+    code: 'RTB-33',
+    title: 'One Month Notice to End Tenancy for Cause',
+    category: 'government',
+    description:
+      'Official statutory notice served under RTA Section 47 for material breach, repeated late rent payments, significant disturbance, or extraordinary damage.',
+    badge: 'Official RTB Statutory Form',
+    source: 'BC Residential Tenancy Branch',
+    link: 'https://www2.gov.bc.ca/assets/gov/housing-and-tenancy/residential-tenancies/forms/rtb33.pdf',
+    isExternal: true,
+  },
 
   // 2. Organization Templates
   {
