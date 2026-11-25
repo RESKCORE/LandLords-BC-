@@ -74,13 +74,15 @@ export const MemberDashboardPage: React.FC<MemberDashboardPageProps> = ({
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [activeNoteModal, setActiveNoteModal] = useState<MemberNote | null>(null);
 
-  // Forms modal & Service Helper modal state
-  const [showAllForms, setShowAllForms] = useState(false);
+  // Card Mini Screen Modal state
+  const [activeCardModal, setActiveCardModal] = useState<'passport' | 'forms' | 'billing' | 'vault' | 'calculator' | null>(null);
+  const [formsSearchQuery, setFormsSearchQuery] = useState('');
+
+  // Service Helper modal state
   const [showServiceHelperModal, setShowServiceHelperModal] = useState(false);
   const [activeAdvisoryTopic, setActiveAdvisoryTopic] = useState<string>('unpaid_rent');
 
   // Billing Portal & CRA Tax Receipt state
-  const [showBillingModal, setShowBillingModal] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState<string | null>(null);
 
@@ -89,9 +91,18 @@ export const MemberDashboardPage: React.FC<MemberDashboardPageProps> = ({
   const [serviceMethod, setServiceMethod] = useState<'person' | 'door' | 'mail'>('door');
   const [calcLastIncrease, setCalcLastIncrease] = useState<string>('2025-01-01');
   const [copiedRent, setCopiedRent] = useState(false);
+  const [copiedRentSchedule, setCopiedRentSchedule] = useState(false);
 
-  // Gauge animation state
-  const [gaugePercent, setGaugePercent] = useState(0);
+  // Computed plan pricing & CRA classification
+  const isPM =
+    membershipPlan.toLowerCase().includes('property') ||
+    membershipPlan.toLowerCase().includes('590') ||
+    membershipPlan.toLowerCase() === 'property-manager';
+  const subtotal = isPM ? 590.0 : 290.0;
+  const planTitle = isPM
+    ? 'Property Manager Membership'
+    : 'Individual Landlord Membership';
+  const invoiceNumber = `LBC-INV-${memberId.replace('BC-MEM-', '')}-2026`;
 
   useEffect(() => {
     // Load stored user info
@@ -184,12 +195,17 @@ export const MemberDashboardPage: React.FC<MemberDashboardPageProps> = ({
       localStorage.setItem('landlords_member_notes', JSON.stringify(initialNotes));
     }
 
-    // Trigger gauge animation smoothly
-    const timer = setTimeout(() => {
-      setGaugePercent(100);
-    }, 200);
-
-    return () => clearTimeout(timer);
+    // Keydown listener to close modals with Escape key
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveCardModal(null);
+        setIsAddingNote(false);
+        setActiveNoteModal(null);
+        setShowServiceHelperModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const handleAddNote = (e: React.FormEvent) => {
@@ -497,7 +513,7 @@ Landlords BC Priority Helpline: ${CONTACT_INFO.phone} (${CONTACT_INFO.phoneHours
 
   const rentDates = calculateRentDates(serviceMethod, calcLastIncrease);
 
-  const handleCopyRentCalc = () => {
+  const getRentScheduleText = () => {
     const methodName =
       serviceMethod === 'person'
         ? 'In Person (Same Day deemed under RTA Sec 88)'
@@ -516,7 +532,7 @@ Landlords BC Priority Helpline: ${CONTACT_INFO.phone} (${CONTACT_INFO.phoneHours
       day: 'numeric',
     });
 
-    const text = `========================================================================
+    return `========================================================================
 BC RESIDENTIAL TENANCY BRANCH — FORM RTB-7 NOTICE SCHEDULE
 Authorized under Section 42 & 43 of the Residential Tenancy Act (RTA)
 ========================================================================
@@ -539,10 +555,26 @@ MANDATORY RTB DISPUTE ADMISSIBILITY RULES:
 3. If rent is due on the 1st of the month, notice must be deemed received before the 1st of the initial notice month.
 4. Landlord must retain proof of service (Form RTB-34 or Registered Mail barcode).
 ========================================================================`;
+  };
 
+  const handleCopyRentCalc = () => {
+    const text = getRentScheduleText();
     navigator.clipboard.writeText(text);
     setCopiedRent(true);
     setTimeout(() => setCopiedRent(false), 3500);
+  };
+
+  const handleDownloadRentSchedule = () => {
+    const text = getRentScheduleText();
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `RTB-7-Rent-Increase-Notice-Schedule-${memberId}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   // 15-day deposit return calculator helper
@@ -598,13 +630,6 @@ MANDATORY RTB DISPUTE ADMISSIBILITY RULES:
       day: 'numeric',
     });
     const taxYear = new Date().getFullYear();
-    const isPM =
-      membershipPlan.toLowerCase().includes('property') ||
-      membershipPlan.toLowerCase().includes('590');
-    const subtotal = isPM ? 590.0 : 290.0;
-    const planTitle = isPM
-      ? 'Property Manager Membership'
-      : 'Individual Landlord Membership';
 
     const receiptContent = `========================================================================
 LANDLORDS BC ASSOCIATION — OFFICIAL CRA TAX RECEIPT & MEMBERSHIP INVOICE
@@ -774,7 +799,7 @@ Vancouver, British Columbia, Canada
             {/* Glass UI Button: Billing & Tax Invoices */}
             <button
               type="button"
-              onClick={() => setShowBillingModal(true)}
+              onClick={() => setActiveCardModal('billing')}
               style={{
                 background: 'rgba(255, 255, 255, 0.65)',
                 backdropFilter: 'blur(14px)',
@@ -924,12 +949,48 @@ Vancouver, British Columbia, Canada
           <div className="bento" style={{ marginTop: '0', gridTemplateColumns: '1.2fr 1fr 1fr' }}>
             
             {/* Card 1: Member Subscription & Protection Passport (Tall Left Anchor) */}
-            <div className="card c-big" style={{ background: '#3b2116', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '16px' }}>
+            <div
+              className="card c-big"
+              onClick={() => setActiveCardModal('passport')}
+              style={{
+                background: '#3b2116',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                padding: '16px',
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+              }}
+              title="Click to open Member Protection & Legal Defense Passport Mini Screen"
+            >
               <img
                 src="/assets/landlord/sunlit-facade.svg"
                 alt="Protected BC property"
                 style={{ objectFit: 'cover', opacity: 0.45 }}
               />
+
+              {/* Mini Screen Pill Hint */}
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '14px',
+                  right: '14px',
+                  zIndex: 10,
+                  background: 'rgba(255, 255, 255, 0.18)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  color: '#f6f0e7',
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  padding: '3px 8px',
+                  borderRadius: '999px',
+                  letterSpacing: '0.02em',
+                }}
+              >
+                Mini Screen ↗
+              </span>
 
               {/* Upper Frosted Glass Panel for Text Readability */}
               <div
@@ -983,7 +1044,10 @@ Vancouver, British Columbia, Canada
                     </div>
                     <button
                       type="button"
-                      onClick={() => setShowBillingModal(true)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveCardModal('billing');
+                      }}
                       style={{
                         background: 'rgba(255, 255, 255, 0.16)',
                         border: '1px solid rgba(255, 255, 255, 0.28)',
@@ -1038,7 +1102,10 @@ Vancouver, British Columbia, Canada
                 {/* Glass UI Themed Action Button */}
                 <button
                   type="button"
-                  onClick={handleDownloadToolkit}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDownloadToolkit();
+                  }}
                   style={{
                     background: 'rgba(255, 255, 255, 0.88)',
                     backdropFilter: 'blur(16px)',
@@ -1083,7 +1150,35 @@ Vancouver, British Columbia, Canada
             </div>
 
             {/* Card 2: RTB Statutory Document Gateway (Top-Middle with Animated Character) */}
-            <div className="card c-pad">
+            <div
+              className="card c-pad"
+              onClick={() => setActiveCardModal('forms')}
+              style={{
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+              }}
+              title="Click to open Official RTB Statutory Gateway Mini Screen"
+            >
+              {/* Mini Screen Pill Hint */}
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '12px',
+                  right: '12px',
+                  zIndex: 5,
+                  background: 'rgba(42, 26, 18, 0.06)',
+                  border: '1px solid rgba(42, 26, 18, 0.12)',
+                  color: '#5b4a3f',
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  padding: '2px 8px',
+                  borderRadius: '999px',
+                }}
+              >
+                Mini Screen ↗
+              </span>
+
               <div className="collage">
                 <div>
                   <img
@@ -1108,7 +1203,10 @@ Vancouver, British Columbia, Canada
                 <div style={{ display: 'flex', gap: '6px', marginTop: '10px', flexWrap: 'wrap' }}>
                   <button
                     type="button"
-                    onClick={() => handleDownloadFormDocument(FORMS_CATALOGUE[1])}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownloadFormDocument(FORMS_CATALOGUE[1]);
+                    }}
                     style={{
                       background: 'rgba(59, 33, 22, 0.88)',
                       backdropFilter: 'blur(12px)',
@@ -1133,7 +1231,10 @@ Vancouver, British Columbia, Canada
 
                   <button
                     type="button"
-                    onClick={() => handleDownloadFormDocument(FORMS_CATALOGUE[2])}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownloadFormDocument(FORMS_CATALOGUE[2]);
+                    }}
                     style={{
                       background: 'rgba(255, 255, 255, 0.72)',
                       backdropFilter: 'blur(12px)',
@@ -1158,7 +1259,10 @@ Vancouver, British Columbia, Canada
 
                   <button
                     type="button"
-                    onClick={() => handleDownloadFormDocument(FORMS_CATALOGUE[4])}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownloadFormDocument(FORMS_CATALOGUE[4]);
+                    }}
                     style={{
                       background: 'rgba(255, 255, 255, 0.72)',
                       backdropFilter: 'blur(12px)',
@@ -1178,7 +1282,10 @@ Vancouver, British Columbia, Canada
 
                   <button
                     type="button"
-                    onClick={() => handleDownloadFormDocument(FORMS_CATALOGUE[5] || FORMS_CATALOGUE[3])}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownloadFormDocument(FORMS_CATALOGUE[5] || FORMS_CATALOGUE[3]);
+                    }}
                     style={{
                       background: 'rgba(255, 255, 255, 0.72)',
                       backdropFilter: 'blur(12px)',
@@ -1198,7 +1305,10 @@ Vancouver, British Columbia, Canada
 
                   <button
                     type="button"
-                    onClick={() => setShowAllForms(true)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveCardModal('forms');
+                    }}
                     style={{
                       background: 'rgba(255, 255, 255, 0.55)',
                       backdropFilter: 'blur(10px)',
@@ -1238,7 +1348,10 @@ Vancouver, British Columbia, Canada
                     </strong>
                     <button
                       type="button"
-                      onClick={() => setShowServiceHelperModal(true)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowServiceHelperModal(true);
+                      }}
                       style={{
                         background: 'none',
                         border: 'none',
@@ -1263,89 +1376,216 @@ Vancouver, British Columbia, Canada
               </div>
             </div>
 
-            {/* Card 3: Statutory Compliance & Health Gauge (Top-Right Radial Graph) */}
-            <div className="card c-pad" id="gauge-card">
-              <div className="gauge">
-                <svg
-                  viewBox="0 0 180 100"
-                  style={{ width: '180px', height: '110px', overflow: 'visible' }}
-                  aria-hidden="true"
+            {/* Card 3: Membership Billing & CRA Tax Invoices (Replaces former radial gauge) */}
+            <div
+              className="card c-pad"
+              id="billing-card"
+              onClick={() => setActiveCardModal('billing')}
+              style={{
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+              }}
+              title="Click to open Membership Billing & CRA Tax Invoices Mini Screen"
+            >
+              {/* Header Badges: CRA Citation & Mini Screen cue */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span
+                  style={{
+                    background: 'rgba(46, 107, 59, 0.12)',
+                    border: '1px solid rgba(46, 107, 59, 0.28)',
+                    color: '#1e542c',
+                    padding: '3px 8px',
+                    borderRadius: '999px',
+                    fontWeight: 700,
+                    fontSize: '10px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
                 >
-                  <defs>
-                    <linearGradient id="gg-dash" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#a9c6e6" />
-                      <stop offset="100%" stopColor="#e9a77d" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    d="M10 95 A80 80 0 0 1 170 95"
-                    fill="none"
-                    stroke="rgba(42,26,18,.1)"
-                    strokeWidth="12"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M10 95 A80 80 0 0 1 170 95"
-                    fill="none"
-                    stroke="url(#gg-dash)"
-                    strokeWidth="12"
-                    strokeLinecap="round"
-                    strokeDasharray="252"
-                    strokeDashoffset={gaugePercent === 100 ? 0 : 252}
-                    style={{
-                      transition: 'stroke-dashoffset 2.2s cubic-bezier(.22,1,.36,1)',
-                    }}
-                  />
-                </svg>
-                <div className="val">
-                  <span>100</span>%
+                  <span style={{ fontSize: '7px' }}>●</span> CRA Form T776 Line 8810
+                </span>
+                <span
+                  style={{
+                    background: 'rgba(42, 26, 18, 0.06)',
+                    border: '1px solid rgba(42, 26, 18, 0.12)',
+                    color: '#5b4a3f',
+                    fontSize: '10px',
+                    fontWeight: 600,
+                    padding: '2px 8px',
+                    borderRadius: '999px',
+                  }}
+                >
+                  Mini Screen ↗
+                </span>
+              </div>
+
+              {/* Itemized Billing Box on Card */}
+              <div
+                style={{
+                  flex: 1,
+                  background: 'rgba(255, 255, 255, 0.72)',
+                  borderRadius: '12px',
+                  padding: '10px 12px',
+                  border: '1px solid rgba(42, 26, 18, 0.08)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: '6px',
+                }}
+              >
+                {/* Invoice Ref & Status */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(42, 26, 18, 0.06)', paddingBottom: '5px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#3b2116' }}>
+                    {invoiceNumber}
+                  </span>
+                  <span style={{ fontSize: '10px', color: '#2e6b3b', fontWeight: 700 }}>
+                    ✓ Paid &amp; Active
+                  </span>
                 </div>
-                {/* High Contrast Statutory Metric Badges */}
-                <div className="ends" style={{ bottom: '2px', left: '8px', right: '8px' }}>
-                  <span
+
+                {/* Member Identity Details */}
+                <div style={{ fontSize: '10.5px', color: '#5b4a3f', lineHeight: 1.35 }}>
+                  <div><strong>Account:</strong> {userEmail}</div>
+                  <div><strong>Member ID:</strong> {memberId} · {planTitle}</div>
+                </div>
+
+                {/* Line Items Breakdown */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '10.5px', color: '#5b4a3f' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Annual Membership Dues</span>
+                    <strong style={{ color: '#2a1a12' }}>${subtotal.toFixed(2)} CAD</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#8c7e75', fontSize: '10px' }}>
+                    <span>GST (5% Exempt Non-Profit)</span>
+                    <span>$0.00 CAD</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#8c7e75', fontSize: '10px' }}>
+                    <span>PST (Provincial Sales Tax Exempt)</span>
+                    <span>$0.00 CAD</span>
+                  </div>
+                </div>
+
+                {/* Total Paid Row */}
+                <div
+                  style={{
+                    borderTop: '1px dashed rgba(42, 26, 18, 0.15)',
+                    paddingTop: '5px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'baseline',
+                  }}
+                >
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#2a1a12' }}>Total Paid (Annual):</span>
+                  <strong style={{ fontSize: '14px', color: '#2a1a12', fontWeight: 800 }}>
+                    ${subtotal.toFixed(2)} CAD
+                  </strong>
+                </div>
+
+                {/* In-Card Action Buttons */}
+                <div style={{ display: 'flex', gap: '6px', marginTop: '2px' }}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenStripePortal();
+                    }}
+                    disabled={portalLoading}
                     style={{
-                      background: 'rgba(46, 107, 59, 0.12)',
-                      border: '1px solid rgba(46, 107, 59, 0.28)',
-                      color: '#1e542c',
-                      padding: '3px 8px',
+                      flex: 1,
+                      background: 'rgba(59, 33, 22, 0.88)',
+                      backdropFilter: 'blur(10px)',
+                      color: '#f6f0e7',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
                       borderRadius: '999px',
-                      fontWeight: 700,
+                      padding: '5px 8px',
                       fontSize: '10.5px',
+                      fontWeight: 600,
+                      cursor: portalLoading ? 'wait' : 'pointer',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '4px',
+                      justifyContent: 'center',
+                      gap: '3px',
+                      transition: 'all 0.2s ease',
                     }}
                   >
-                    <span style={{ fontSize: '8px' }}>●</span> 0% Notice Error Risk
-                  </span>
-                  <span
+                    <span>{portalLoading ? 'Connecting...' : 'Stripe Portal'}</span>
+                    <span>↗</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownloadTaxReceipt();
+                    }}
                     style={{
-                      background: 'rgba(59, 33, 22, 0.1)',
-                      border: '1px solid rgba(59, 33, 22, 0.22)',
+                      flex: 1,
+                      background: 'rgba(255, 255, 255, 0.8)',
+                      backdropFilter: 'blur(10px)',
                       color: '#2a1a12',
-                      padding: '3px 8px',
+                      border: '1px solid rgba(42, 26, 18, 0.15)',
                       borderRadius: '999px',
-                      fontWeight: 700,
+                      padding: '5px 8px',
                       fontSize: '10.5px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '4px',
+                      justifyContent: 'center',
+                      gap: '3px',
+                      transition: 'all 0.2s ease',
                     }}
                   >
-                    <span style={{ fontSize: '8px' }}>●</span> 100% Client-Sealed Vault
-                  </span>
+                    <span>Tax Receipt</span>
+                    <span>↓</span>
+                  </button>
                 </div>
               </div>
-              <div className="txt">
-                <h4>Statutory Procedural Health: 100%</h4>
+
+              {/* Card Footer Text */}
+              <div className="txt" style={{ marginTop: '10px' }}>
+                <h4>Membership Billing &amp; CRA Invoices</h4>
                 <p>
-                  All condition inspection records, timestamps, and service affidavits are encrypted on device and sealed locally under the Zero-Disclosure Charter.
+                  100% tax-deductible rental business expense under CRA Form T776 Line 8810 / Line 8871. Click card to inspect full tax dossier &amp; payment ledger.
                 </p>
               </div>
             </div>
 
             {/* Card 4: Private Property Vault & Unit Ledger (Bottom-Middle Interactive Rows) */}
-            <div className="card c-pad">
+            <div
+              className="card c-pad"
+              onClick={() => setActiveCardModal('vault')}
+              style={{
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+              }}
+              title="Click to open Private Property Vault & Unit Ledger Mini Screen"
+            >
+              {/* Mini Screen Pill Hint */}
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '12px',
+                  right: '12px',
+                  zIndex: 5,
+                  background: 'rgba(42, 26, 18, 0.06)',
+                  border: '1px solid rgba(42, 26, 18, 0.12)',
+                  color: '#5b4a3f',
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  padding: '2px 8px',
+                  borderRadius: '999px',
+                }}
+              >
+                Mini Screen ↗
+              </span>
+
               <div className="rows">
                 {notes.slice(0, 3).map((note, idx) => (
                   <div
@@ -1354,7 +1594,10 @@ Vancouver, British Columbia, Canada
                     style={{ ['--i' as string]: idx, opacity: 1, transform: 'none' }}
                     role="button"
                     tabIndex={0}
-                    onClick={() => setActiveNoteModal(note)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveNoteModal(note);
+                    }}
                     title="Click to view complete confidential note & compliance status"
                   >
                     <img
@@ -1406,7 +1649,10 @@ Vancouver, British Columbia, Canada
                   {/* Glass UI Button: Add Unit Record */}
                   <button
                     type="button"
-                    onClick={() => setIsAddingNote(true)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsAddingNote(true);
+                    }}
                     style={{
                       background: 'rgba(59, 33, 22, 0.88)',
                       backdropFilter: 'blur(12px)',
@@ -1435,7 +1681,35 @@ Vancouver, British Columbia, Canada
             </div>
 
             {/* Card 5: 2026 Provincial Rent Calculator (Bottom-Right with Architectural Artwork) */}
-            <div className="card c-pad">
+            <div
+              className="card c-pad"
+              onClick={() => setActiveCardModal('calculator')}
+              style={{
+                cursor: 'pointer',
+                position: 'relative',
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+              }}
+              title="Click to open 2026 Statutory Rent Increase Engine Mini Screen"
+            >
+              {/* Mini Screen Pill Hint */}
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '12px',
+                  right: '12px',
+                  zIndex: 5,
+                  background: 'rgba(42, 26, 18, 0.06)',
+                  border: '1px solid rgba(42, 26, 18, 0.12)',
+                  color: '#5b4a3f',
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  padding: '2px 8px',
+                  borderRadius: '999px',
+                }}
+              >
+                Mini Screen ↗
+              </span>
+
               <div className="insight">
                 <img
                   src="/assets/landlord/penthouse-living.svg"
@@ -1454,6 +1728,7 @@ Vancouver, British Columbia, Canada
                   <input
                     type="number"
                     value={rentInput}
+                    onClick={(e) => e.stopPropagation()}
                     onChange={(e) => setRentInput(Math.max(0, Number(e.target.value)))}
                     style={{
                       width: '92px',
@@ -1476,7 +1751,10 @@ Vancouver, British Columbia, Canada
                   {/* Glass UI Button: Copy RTB-7 */}
                   <button
                     type="button"
-                    onClick={handleCopyRentCalc}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCopyRentCalc();
+                    }}
                     style={{
                       background: copiedRent ? 'rgba(46, 107, 59, 0.88)' : 'rgba(59, 33, 22, 0.88)',
                       backdropFilter: 'blur(12px)',
@@ -1504,6 +1782,7 @@ Vancouver, British Columbia, Canada
                     <span>Method:</span>
                     <select
                       value={serviceMethod}
+                      onClick={(e) => e.stopPropagation()}
                       onChange={(e) => setServiceMethod(e.target.value as any)}
                       style={{
                         fontSize: '10px',
@@ -2009,69 +2288,281 @@ Vancouver, British Columbia, Canada
             </div>
           )}
 
-          {/* All Forms Catalogue Modal */}
-          {showAllForms && (
+          {/* MINI SCREEN 1: Member Protection & Legal Defense Passport */}
+          {activeCardModal === 'passport' && (
             <div
               className="modal-backdrop open"
               data-lenis-prevent
               role="dialog"
               onClick={(e) => {
-                if (e.target === e.currentTarget) setShowAllForms(false);
+                if (e.target === e.currentTarget) setActiveCardModal(null);
               }}
             >
-              <div className="modal-box" style={{ maxWidth: '820px', maxHeight: '88vh', display: 'flex', flexDirection: 'column', padding: '24px' }}>
+              <div className="modal-box" style={{ maxWidth: '680px', maxHeight: '88vh', overflowY: 'auto', padding: '24px' }}>
+                <div className="modal-top" style={{ marginBottom: '14px' }}>
+                  <div>
+                    <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#2e6b3b', fontWeight: 700 }}>
+                      ● Active RTA Coverage · Zero-Disclosure Verified
+                    </span>
+                    <h3 style={{ margin: '4px 0 0', fontSize: '20px', color: '#2a1a12' }}>
+                      Member Protection &amp; Legal Defense Passport
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    className="modal-close"
+                    onClick={() => setActiveCardModal(null)}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <p style={{ fontSize: '13px', color: '#5b4a3f', lineHeight: 1.55, margin: '0 0 16px' }}>
+                  Welcome back, <strong>{userName}</strong>. As an active member of Landlords BC (<strong>{memberId}</strong>), your residential rental units are protected under our comprehensive statutory defense framework, priority helpline access, and dispute evidence standards.
+                </p>
+
+                {/* Member Identity & Plan Card */}
+                <div style={{ background: '#3b2116', color: '#ffffff', borderRadius: '14px', padding: '18px', marginBottom: '16px', boxShadow: '0 8px 24px rgba(59, 33, 22, 0.25)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px' }}>
+                    <div>
+                      <div style={{ fontSize: '10.5px', textTransform: 'uppercase', color: '#bbf7d0', fontWeight: 700 }}>
+                        Member Association ID: {memberId} ✓
+                      </div>
+                      <div style={{ fontSize: '17px', fontWeight: 700, marginTop: '2px', color: '#f6f0e7' }}>
+                        {userName}
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.8)', marginTop: '2px' }}>
+                        {userEmail}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ background: 'rgba(46, 107, 59, 0.5)', border: '1px solid rgba(74, 222, 128, 0.6)', color: '#bbf7d0', padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 700 }}>
+                        ● RTA Defense Active
+                      </span>
+                      <div style={{ fontSize: '12px', color: '#f6f0e7', marginTop: '6px', fontWeight: 600 }}>
+                        {planTitle}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.15)', display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'rgba(255, 255, 255, 0.85)', flexWrap: 'wrap', gap: '8px' }}>
+                    <span>Jurisdiction: <strong>British Columbia (RTA SBC 2002 c. 78)</strong></span>
+                    <span>Security: <strong>Client-Sealed Device Vault</strong></span>
+                    <span>CRA Status: <strong>Form T776 Line 8810 Deductible</strong></span>
+                  </div>
+                </div>
+
+                {/* The 4 Statutory Defense Pillars */}
+                <div style={{ marginBottom: '16px' }}>
+                  <strong style={{ fontSize: '13px', color: '#2a1a12', display: 'block', marginBottom: '8px' }}>
+                    The 4 Pillars of BC Landlord Statutory Defense:
+                  </strong>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div style={{ background: '#ffffff', border: '1px solid rgba(42, 26, 18, 0.1)', borderRadius: '10px', padding: '12px' }}>
+                      <strong style={{ fontSize: '12px', color: '#2a1a12', display: 'block' }}>
+                        1. RTA Section 5 Non-Contracting Out
+                      </strong>
+                      <p style={{ fontSize: '11px', color: '#5b4a3f', margin: '4px 0 0', lineHeight: 1.45 }}>
+                        Guarantees tenancy agreements comply strictly with statutory protections; prevents landlord liability from unenforceable illegal lease clauses.
+                      </p>
+                    </div>
+
+                    <div style={{ background: '#ffffff', border: '1px solid rgba(42, 26, 18, 0.1)', borderRadius: '10px', padding: '12px' }}>
+                      <strong style={{ fontSize: '12px', color: '#2a1a12', display: 'block' }}>
+                        2. Expedited Notice Defense (RTB-30 / RTB-33)
+                      </strong>
+                      <p style={{ fontSize: '11px', color: '#5b4a3f', margin: '4px 0 0', lineHeight: 1.45 }}>
+                        Pre-vetted 10-day unpaid rent and 1-month cause notice packages verified against common RTB arbitrator dismissal pitfalls.
+                      </p>
+                    </div>
+
+                    <div style={{ background: '#ffffff', border: '1px solid rgba(42, 26, 18, 0.1)', borderRadius: '10px', padding: '12px' }}>
+                      <strong style={{ fontSize: '12px', color: '#2a1a12', display: 'block' }}>
+                        3. Condition Inspection Shield (RTB-27)
+                      </strong>
+                      <p style={{ fontSize: '11px', color: '#5b4a3f', margin: '4px 0 0', lineHeight: 1.45 }}>
+                        Mandatory move-in &amp; move-out condition reporting (RTA Sections 23 &amp; 35) preserving your right to claim against damage deposits.
+                      </p>
+                    </div>
+
+                    <div style={{ background: '#ffffff', border: '1px solid rgba(42, 26, 18, 0.1)', borderRadius: '10px', padding: '12px' }}>
+                      <strong style={{ fontSize: '12px', color: '#2a1a12', display: 'block' }}>
+                        4. 2026 Rent Regulation Engine (RTB-7)
+                      </strong>
+                      <p style={{ fontSize: '11px', color: '#5b4a3f', margin: '4px 0 0', lineHeight: 1.45 }}>
+                        Precise 3.0% maximum allowable annual rent cap execution with RTA Section 42 3-full-calendar-months deemed notice calculation.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Priority Advisor Line Banner */}
+                <div style={{ background: 'rgba(46, 107, 59, 0.08)', border: '1px solid rgba(46, 107, 59, 0.25)', borderRadius: '12px', padding: '14px', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <div>
+                      <span style={{ fontSize: '10.5px', textTransform: 'uppercase', color: '#2e6b3b', fontWeight: 700 }}>
+                        Direct Member Hotline
+                      </span>
+                      <div style={{ fontSize: '16px', fontWeight: 800, color: '#1e542c', marginTop: '2px' }}>
+                        📞 {CONTACT_INFO.phone}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#5b4a3f', marginTop: '2px' }}>
+                        Operating Hours: {CONTACT_INFO.phoneHours} · Mention Member PIN: <strong>{memberId}</strong>
+                      </div>
+                    </div>
+                    <a
+                      href={CONTACT_INFO.phoneHref}
+                      style={{
+                        background: '#2e6b3b',
+                        color: '#ffffff',
+                        padding: '8px 16px',
+                        borderRadius: '999px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        textDecoration: 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      Call Priority Desk
+                    </a>
+                  </div>
+                </div>
+
+                {/* Primary Actions */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={handleDownloadToolkit}
+                    style={{
+                      background: 'rgba(59, 33, 22, 0.9)',
+                      backdropFilter: 'blur(12px)',
+                      color: '#f6f0e7',
+                      border: '1px solid rgba(255, 255, 255, 0.25)',
+                      boxShadow: '0 4px 14px rgba(59, 33, 22, 0.2)',
+                      padding: '10px 20px',
+                      borderRadius: '999px',
+                      fontSize: '12.5px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <span>Download Complete Legal Defense Kit</span>
+                    <span>↓</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveCardModal(null)}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.85)',
+                      border: '1px solid rgba(42, 26, 18, 0.2)',
+                      padding: '10px 20px',
+                      borderRadius: '999px',
+                      fontSize: '12.5px',
+                      fontWeight: 600,
+                      color: '#2a1a12',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Close Passport
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MINI SCREEN 2: Official RTB Statutory Gateway & Forms Repository */}
+          {activeCardModal === 'forms' && (
+            <div
+              className="modal-backdrop open"
+              data-lenis-prevent
+              role="dialog"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setActiveCardModal(null);
+              }}
+            >
+              <div className="modal-box" style={{ maxWidth: '840px', maxHeight: '88vh', display: 'flex', flexDirection: 'column', padding: '24px' }}>
                 <div className="modal-top" style={{ marginBottom: '12px' }}>
                   <div>
                     <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#2e6b3b', fontWeight: 700 }}>
                       Official RTB Statutory Repository
                     </span>
                     <h3 style={{ margin: '4px 0 0', fontSize: '20px', color: '#2a1a12' }}>
-                      All Official Forms &amp; Practical Templates
+                      Official Forms &amp; Practical Templates
                     </h3>
                   </div>
                   <button
                     type="button"
                     className="modal-close"
-                    onClick={() => setShowAllForms(false)}
+                    onClick={() => setActiveCardModal(null)}
                   >
                     ✕
                   </button>
                 </div>
 
-                {/* Concise 2026 BC RTA Compliance Banner inside Modal */}
-                <div style={{ background: 'rgba(42, 26, 18, 0.04)', border: '1px solid rgba(42, 26, 18, 0.08)', borderRadius: '10px', padding: '10px 14px', marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
-                  <div style={{ fontSize: '11px', color: '#3b2116', lineHeight: 1.4 }}>
-                    <strong>2026 Statutory Rules:</strong> 3.0% Max Rent Cap (RTB-7) · 5-Day Unpaid Rent Cure (RTB-30) · 15-Day Deposit Return (RTA Sec 38)
+                {/* Search Bar & Deemed Service Rules Link */}
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: '240px', position: 'relative' }}>
+                    <input
+                      type="text"
+                      placeholder="Search forms (e.g. RTB-30, RTB-27, RTB-7, notice, deposit)..."
+                      value={formsSearchQuery}
+                      onChange={(e) => setFormsSearchQuery(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(42, 26, 18, 0.2)',
+                        fontSize: '12.5px',
+                        background: '#ffffff',
+                        color: '#2a1a12',
+                      }}
+                    />
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      setShowAllForms(false);
-                      setShowServiceHelperModal(true);
-                    }}
+                    onClick={() => setShowServiceHelperModal(true)}
                     style={{
-                      background: 'none',
-                      border: 'none',
+                      background: 'rgba(46, 107, 59, 0.1)',
+                      border: '1px solid rgba(46, 107, 59, 0.25)',
                       color: '#2e6b3b',
-                      fontSize: '11px',
+                      fontSize: '11.5px',
                       fontWeight: 700,
                       cursor: 'pointer',
-                      padding: 0,
-                      textDecoration: 'underline',
+                      padding: '8px 14px',
+                      borderRadius: '8px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
                     }}
                   >
-                    Deemed Service Rules →
+                    ⚖️ Deemed Service Rules &amp; Proof Checklist →
                   </button>
                 </div>
 
-                <div style={{ flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '14px', paddingRight: '4px' }}>
-                  {FORMS_CATALOGUE.map((form) => (
+                {/* Form Cards Grid */}
+                <div style={{ flex: 1, overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '12px', paddingRight: '4px' }}>
+                  {FORMS_CATALOGUE.filter((f) => {
+                    if (!formsSearchQuery.trim()) return true;
+                    const q = formsSearchQuery.toLowerCase();
+                    return (
+                      f.code.toLowerCase().includes(q) ||
+                      f.title.toLowerCase().includes(q) ||
+                      f.description.toLowerCase().includes(q) ||
+                      f.badge.toLowerCase().includes(q)
+                    );
+                  }).map((form) => (
                     <div
                       key={form.id}
                       style={{
                         border: '1px solid rgba(42, 26, 18, 0.1)',
                         borderRadius: '12px',
-                        padding: '16px',
+                        padding: '14px',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
@@ -2080,13 +2571,13 @@ Vancouver, British Columbia, Canada
                     >
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                          <span style={{ fontWeight: 800, fontSize: '14px', color: '#3b2116' }}>{form.code}</span>
+                          <span style={{ fontWeight: 800, fontSize: '13.5px', color: '#3b2116' }}>{form.code}</span>
                           <span style={{ fontSize: '10px', background: 'rgba(46, 107, 59, 0.1)', color: '#2e6b3b', padding: '2px 8px', borderRadius: '999px', fontWeight: 600 }}>
                             {form.badge}
                           </span>
                         </div>
-                        <h4 style={{ fontSize: '14px', fontWeight: 700, margin: '0 0 4px', color: '#2a1a12' }}>{form.title}</h4>
-                        <p style={{ fontSize: '12px', color: '#5b4a3f', margin: '0 0 12px', lineHeight: 1.5 }}>{form.description}</p>
+                        <h4 style={{ fontSize: '13.5px', fontWeight: 700, margin: '0 0 4px', color: '#2a1a12' }}>{form.title}</h4>
+                        <p style={{ fontSize: '11.5px', color: '#5b4a3f', margin: '0 0 10px', lineHeight: 1.45 }}>{form.description}</p>
                       </div>
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <button
@@ -2095,13 +2586,11 @@ Vancouver, British Columbia, Canada
                           style={{
                             background: 'rgba(59, 33, 22, 0.9)',
                             backdropFilter: 'blur(12px)',
-                            WebkitBackdropFilter: 'blur(12px)',
-                            border: '1px solid rgba(255, 255, 255, 0.25)',
-                            boxShadow: '0 4px 14px rgba(59, 33, 22, 0.18)',
                             color: '#f6f0e7',
-                            padding: '8px 14px',
+                            border: '1px solid rgba(255, 255, 255, 0.25)',
+                            padding: '7px 12px',
                             borderRadius: '999px',
-                            fontSize: '12px',
+                            fontSize: '11.5px',
                             fontWeight: 700,
                             cursor: 'pointer',
                             flex: 1,
@@ -2117,21 +2606,17 @@ Vancouver, British Columbia, Canada
                             rel="noopener noreferrer"
                             style={{
                               background: 'rgba(255, 255, 255, 0.75)',
-                              backdropFilter: 'blur(12px)',
-                              WebkitBackdropFilter: 'blur(12px)',
                               border: '1px solid rgba(42, 26, 18, 0.15)',
-                              boxShadow: '0 2px 8px rgba(42, 26, 18, 0.05)',
                               color: '#2a1a12',
-                              padding: '8px 14px',
+                              padding: '7px 12px',
                               borderRadius: '999px',
-                              fontSize: '12px',
+                              fontSize: '11.5px',
                               fontWeight: 600,
                               textDecoration: 'none',
                               whiteSpace: 'nowrap',
                               display: 'inline-flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              transition: 'all 0.2s ease',
                             }}
                           >
                             PDF ↗
@@ -2145,17 +2630,17 @@ Vancouver, British Columbia, Canada
             </div>
           )}
 
-          {/* Stripe Customer Billing & CRA Tax Invoices Modal */}
-          {showBillingModal && (
+          {/* MINI SCREEN 3: Membership Billing & CRA Tax Invoices */}
+          {activeCardModal === 'billing' && (
             <div
               className="modal-backdrop open"
               data-lenis-prevent
               role="dialog"
               onClick={(e) => {
-                if (e.target === e.currentTarget) setShowBillingModal(false);
+                if (e.target === e.currentTarget) setActiveCardModal(null);
               }}
             >
-              <div className="modal-box" style={{ maxWidth: '640px', maxHeight: '88vh', overflowY: 'auto', padding: '24px' }}>
+              <div className="modal-box" style={{ maxWidth: '660px', maxHeight: '88vh', overflowY: 'auto', padding: '24px' }}>
                 <div className="modal-top" style={{ marginBottom: '14px' }}>
                   <div>
                     <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#2e6b3b', fontWeight: 700 }}>
@@ -2168,49 +2653,86 @@ Vancouver, British Columbia, Canada
                   <button
                     type="button"
                     className="modal-close"
-                    onClick={() => setShowBillingModal(false)}
+                    onClick={() => setActiveCardModal(null)}
                   >
                     ✕
                   </button>
                 </div>
 
                 <p style={{ fontSize: '13px', color: '#5b4a3f', lineHeight: 1.5, margin: '0 0 16px' }}>
-                  Under Canada Revenue Agency (CRA) guidelines for real estate rentals (Form T776 / Guide T4036), association membership dues and legal defense fees are <strong>100% tax-deductible</strong> against your gross rental revenue.
+                  Under Canada Revenue Agency (CRA) guidelines for real estate rentals (Form T776 / Guide T4036), landlord association membership dues and legal defense fees are <strong>100% tax-deductible</strong> against your gross rental revenue.
                 </p>
 
-                {/* Billing Summary Card */}
-                <div style={{ background: '#ffffff', border: '1px solid rgba(42, 26, 18, 0.12)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                {/* Complete Itemized Statement & Invoice */}
+                <div style={{ background: '#ffffff', border: '1px solid rgba(42, 26, 18, 0.12)', borderRadius: '14px', padding: '18px', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgba(42, 26, 18, 0.08)', paddingBottom: '12px', marginBottom: '12px' }}>
                     <div>
-                      <div style={{ fontSize: '10.5px', textTransform: 'uppercase', color: '#8c7e75', fontWeight: 700 }}>
-                        Registered Member Account
+                      <div style={{ fontSize: '10px', textTransform: 'uppercase', color: '#8c7e75', fontWeight: 700 }}>
+                        Official Invoice Ref
                       </div>
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#2a1a12', marginTop: '2px', wordBreak: 'break-all' }}>
-                        {userEmail}
+                      <div style={{ fontSize: '16px', fontWeight: 800, color: '#3b2116', marginTop: '2px' }}>
+                        {invoiceNumber}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#5b4a3f' }}>ID: {memberId}</div>
+                      <div style={{ fontSize: '11.5px', color: '#5b4a3f', marginTop: '2px' }}>
+                        Member: <strong>{userEmail}</strong> ({memberId})
+                      </div>
                     </div>
-
-                    <div>
-                      <div style={{ fontSize: '10.5px', textTransform: 'uppercase', color: '#8c7e75', fontWeight: 700 }}>
-                        Active Subscription Tier
-                      </div>
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#2a1a12', marginTop: '2px' }}>
-                        {formatPlanName(membershipPlan)}
-                      </div>
-                      <div style={{ fontSize: '11px', color: '#2e6b3b', fontWeight: 600 }}>
-                        ● Active · Stripe Verified CAD
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ background: 'rgba(46, 107, 59, 0.12)', border: '1px solid rgba(46, 107, 59, 0.3)', color: '#2e6b3b', padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 700 }}>
+                        ✓ Paid &amp; Active
+                      </span>
+                      <div style={{ fontSize: '11px', color: '#8c7e75', marginTop: '4px' }}>
+                        Processed via Stripe Canada (CAD)
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid rgba(42, 26, 18, 0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px', color: '#5b4a3f', flexWrap: 'wrap', gap: '6px' }}>
-                    <span>Payment Gateway: <strong>Stripe Canada</strong></span>
-                    <span>CRA Deduction: <strong>Line 8810 / 8871</strong></span>
+                  {/* Line Items Table */}
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ fontSize: '10.5px', textTransform: 'uppercase', color: '#8c7e75', fontWeight: 700, marginBottom: '6px' }}>
+                      Itemized Annual Subscription Charges:
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid rgba(42, 26, 18, 0.04)' }}>
+                        <span>1. {planTitle} (2026 Annual Access)</span>
+                        <strong style={{ color: '#2a1a12' }}>${subtotal.toFixed(2)} CAD</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#8c7e75', fontSize: '11px', paddingLeft: '12px' }}>
+                        <span>• BC RTA Statutory Defense &amp; Form Dossiers</span>
+                        <span>Included</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#8c7e75', fontSize: '11px', paddingLeft: '12px' }}>
+                        <span>• Priority Tenancy Advisor Line Access</span>
+                        <span>Included</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#8c7e75', fontSize: '11px', paddingLeft: '12px' }}>
+                        <span>• Zero-Disclosure Private Property Vault</span>
+                        <span>Included</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#8c7e75', fontSize: '11px', paddingTop: '4px' }}>
+                        <span>GST (5.0% - Non-Profit Association Exempt)</span>
+                        <span>$0.00 CAD</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#8c7e75', fontSize: '11px' }}>
+                        <span>PST (Provincial Sales Tax Exempt)</span>
+                        <span>$0.00 CAD</span>
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '2px dashed rgba(42, 26, 18, 0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#2a1a12' }}>Total Paid:</span>
+                      <strong style={{ fontSize: '18px', color: '#2a1a12', fontWeight: 800 }}>
+                        ${subtotal.toFixed(2)} CAD
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div style={{ background: 'rgba(42, 26, 18, 0.04)', borderRadius: '8px', padding: '10px 12px', fontSize: '11px', color: '#5b4a3f', lineHeight: 1.45 }}>
+                    <strong>CRA Tax Filing Citation:</strong> Claim this payment on CRA Form T776 (Statement of Real Estate Rentals) under <strong>Line 8810 ("Legal, accounting and other professional fees")</strong> or <strong>Line 8871 ("Management and administration fees")</strong>.
                   </div>
                 </div>
 
-                {/* Notification / Error alert if portal redirect issue */}
+                {/* Error Notice if any */}
                 {portalError && (
                   <div style={{ background: 'rgba(180, 83, 9, 0.08)', border: '1px solid rgba(180, 83, 9, 0.25)', borderRadius: '8px', padding: '10px 12px', marginBottom: '16px', fontSize: '11.5px', color: '#92400e', lineHeight: 1.45 }}>
                     <strong>Stripe Portal Notice:</strong> {portalError}
@@ -2219,7 +2741,6 @@ Vancouver, British Columbia, Canada
 
                 {/* Primary Actions */}
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' }}>
-                  {/* Stripe Customer Portal Redirect */}
                   <button
                     type="button"
                     onClick={handleOpenStripePortal}
@@ -2229,10 +2750,9 @@ Vancouver, British Columbia, Canada
                       minWidth: '220px',
                       background: 'rgba(59, 33, 22, 0.9)',
                       backdropFilter: 'blur(12px)',
-                      WebkitBackdropFilter: 'blur(12px)',
+                      color: '#f6f0e7',
                       border: '1px solid rgba(255, 255, 255, 0.25)',
                       boxShadow: '0 4px 14px rgba(59, 33, 22, 0.2)',
-                      color: '#f6f0e7',
                       padding: '12px 18px',
                       borderRadius: '999px',
                       fontSize: '12.5px',
@@ -2249,7 +2769,6 @@ Vancouver, British Columbia, Canada
                     <span>↗</span>
                   </button>
 
-                  {/* Instant CRA Tax Receipt Download */}
                   <button
                     type="button"
                     onClick={handleDownloadTaxReceipt}
@@ -2257,8 +2776,6 @@ Vancouver, British Columbia, Canada
                       flex: 1,
                       minWidth: '220px',
                       background: 'rgba(255, 255, 255, 0.85)',
-                      backdropFilter: 'blur(12px)',
-                      WebkitBackdropFilter: 'blur(12px)',
                       border: '1px solid rgba(42, 26, 18, 0.2)',
                       boxShadow: '0 3px 12px rgba(42, 26, 18, 0.05)',
                       color: '#2a1a12',
@@ -2280,7 +2797,368 @@ Vancouver, British Columbia, Canada
                 </div>
 
                 <div style={{ background: 'rgba(42, 26, 18, 0.04)', borderRadius: '8px', padding: '10px 12px', fontSize: '11px', color: '#5b4a3f', lineHeight: 1.5 }}>
-                  💡 <strong>Tax Season Tip:</strong> Pass your downloaded receipt to your accountant or bookkeeper to deduct your annual membership fee on CRA Form T776. Subscriptions renew automatically each year to ensure uninterrupted RTA legal defense.
+                  💡 <strong>Audit Compliance Tip:</strong> Retain your downloaded CRA Tax Receipt for a minimum of 6 taxation years pursuant to CRA compliance guidelines. Subscriptions renew annually to guarantee continuous statutory defense coverage.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MINI SCREEN 4: Private Property Vault & Complete Unit Ledger */}
+          {activeCardModal === 'vault' && (
+            <div
+              className="modal-backdrop open"
+              data-lenis-prevent
+              role="dialog"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setActiveCardModal(null);
+              }}
+            >
+              <div className="modal-box" style={{ maxWidth: '780px', maxHeight: '88vh', overflowY: 'auto', padding: '24px' }}>
+                <div className="modal-top" style={{ marginBottom: '14px' }}>
+                  <div>
+                    <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#2e6b3b', fontWeight: 700 }}>
+                      Zero-Disclosure Property Vault · Encrypted on Device
+                    </span>
+                    <h3 style={{ margin: '4px 0 0', fontSize: '20px', color: '#2a1a12' }}>
+                      Private Property Vault &amp; Complete Unit Ledger
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    className="modal-close"
+                    onClick={() => setActiveCardModal(null)}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Ledger Statistics & Add Record Button */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', border: '1px solid rgba(42, 26, 18, 0.1)', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+                  <div style={{ display: 'flex', gap: '18px', fontSize: '12px' }}>
+                    <div>
+                      <span style={{ color: '#8c7e75', fontSize: '10.5px', textTransform: 'uppercase', fontWeight: 700, display: 'block' }}>Units Logged</span>
+                      <strong style={{ fontSize: '15px', color: '#2a1a12' }}>{notes.length}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#8c7e75', fontSize: '10.5px', textTransform: 'uppercase', fontWeight: 700, display: 'block' }}>RTB-27 Signed</span>
+                      <strong style={{ fontSize: '15px', color: '#2e6b3b' }}>{notes.filter((n) => n.conditionInspectionSigned).length}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#8c7e75', fontSize: '10.5px', textTransform: 'uppercase', fontWeight: 700, display: 'block' }}>Deposit Watch</span>
+                      <strong style={{ fontSize: '15px', color: '#92400e' }}>{notes.filter((n) => n.depositStatus === 'forwarding_received').length}</strong>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingNote(true)}
+                    style={{
+                      background: 'rgba(59, 33, 22, 0.9)',
+                      color: '#f6f0e7',
+                      padding: '8px 16px',
+                      borderRadius: '999px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      border: '1px solid rgba(255, 255, 255, 0.25)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    + Add Unit Record
+                  </button>
+                </div>
+
+                {/* All Unit Records Cards */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+                  {notes.map((note) => {
+                    const depositCountdown = calculateDepositCountdown(note.depositForwardingDate);
+                    return (
+                      <div
+                        key={note.id}
+                        style={{
+                          background: '#ffffff',
+                          border: '1px solid rgba(42, 26, 18, 0.1)',
+                          borderRadius: '12px',
+                          padding: '14px 16px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '8px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                          <div>
+                            <span style={{ fontSize: '15px', fontWeight: 700, color: '#2a1a12' }}>{note.unit}</span>
+                            {note.tenantName && (
+                              <span style={{ fontSize: '12px', color: '#5b4a3f', marginLeft: '8px' }}>
+                                (Tenant: {note.tenantName})
+                              </span>
+                            )}
+                          </div>
+                          {note.complianceTag && (
+                            <span
+                              style={{
+                                fontSize: '10px',
+                                fontWeight: 700,
+                                padding: '3px 8px',
+                                borderRadius: '999px',
+                                background: note.complianceTag.includes('Watch') ? 'rgba(180, 83, 9, 0.15)' : 'rgba(46, 107, 59, 0.12)',
+                                color: note.complianceTag.includes('Watch') ? '#92400e' : '#2e6b3b',
+                              }}
+                            >
+                              {note.complianceTag}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* 15-Day Countdown Alert if active */}
+                        {depositCountdown && (
+                          <div
+                            style={{
+                              background: depositCountdown.isOverdue ? 'rgba(185, 28, 28, 0.08)' : 'rgba(180, 83, 9, 0.08)',
+                              border: `1px solid ${depositCountdown.isOverdue ? 'rgba(185, 28, 28, 0.25)' : 'rgba(180, 83, 9, 0.25)'}`,
+                              borderRadius: '8px',
+                              padding: '8px 12px',
+                              fontSize: '11px',
+                              color: depositCountdown.isOverdue ? '#b91c1c' : '#92400e',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <span>⚠️ 15-Day Return Deadline: <strong>{depositCountdown.deadlineStr}</strong></span>
+                            <strong>{depositCountdown.isOverdue ? 'OVERDUE!' : `${depositCountdown.daysRemaining} days remaining`}</strong>
+                          </div>
+                        )}
+
+                        {/* Details row */}
+                        <div style={{ display: 'flex', gap: '16px', fontSize: '11px', color: '#5b4a3f', flexWrap: 'wrap' }}>
+                          <span>Tenancy: <strong>{note.moveInDate || note.timestamp}</strong></span>
+                          <span>Deposit: <strong>{note.depositAmount ? `$${note.depositAmount} CAD` : 'N/A'}</strong></span>
+                          <span>RTB-27: <strong>{note.conditionInspectionSigned ? '✓ Signed' : '⚠️ Pending'}</strong></span>
+                          <span>Safety Check: <strong>{note.annualSafetyChecked ? '✓ Verified' : 'Scheduled'}</strong></span>
+                        </div>
+
+                        <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#3b2116', lineHeight: 1.45, background: 'rgba(42, 26, 18, 0.03)', padding: '8px 10px', borderRadius: '6px' }}>
+                          {note.note}
+                        </p>
+
+                        {/* Card actions */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteNote(note.id)}
+                            style={{ background: 'none', border: 'none', color: '#b91c1c', fontSize: '11px', cursor: 'pointer', padding: 0 }}
+                          >
+                            Delete Record ✕
+                          </button>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              type="button"
+                              onClick={() => handleExportUnitEvidence(note)}
+                              style={{
+                                background: 'rgba(59, 33, 22, 0.88)',
+                                color: '#f6f0e7',
+                                border: '1px solid rgba(255, 255, 255, 0.25)',
+                                padding: '5px 12px',
+                                borderRadius: '999px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Export RTB Dossier ↓
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveNoteModal(note)}
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.85)',
+                                color: '#2a1a12',
+                                border: '1px solid rgba(42, 26, 18, 0.15)',
+                                padding: '5px 12px',
+                                borderRadius: '999px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              View Full Details
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MINI SCREEN 5: 2026 Statutory Rent Increase Engine */}
+          {activeCardModal === 'calculator' && (
+            <div
+              className="modal-backdrop open"
+              data-lenis-prevent
+              role="dialog"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setActiveCardModal(null);
+              }}
+            >
+              <div className="modal-box" style={{ maxWidth: '720px', maxHeight: '88vh', overflowY: 'auto', padding: '24px' }}>
+                <div className="modal-top" style={{ marginBottom: '14px' }}>
+                  <div>
+                    <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#2e6b3b', fontWeight: 700 }}>
+                      BC Residential Tenancy Act · Section 42 &amp; 43
+                    </span>
+                    <h3 style={{ margin: '4px 0 0', fontSize: '20px', color: '#2a1a12' }}>
+                      2026 Statutory Rent Increase Engine
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    className="modal-close"
+                    onClick={() => setActiveCardModal(null)}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <p style={{ fontSize: '13px', color: '#5b4a3f', lineHeight: 1.5, margin: '0 0 16px' }}>
+                  For the calendar year 2026, the maximum allowable annual rent increase in British Columbia is strictly capped at <strong>3.0%</strong>. Landlords must give tenants at least <strong>3 full rental payment months' notice</strong> on official unaltered Form RTB-7.
+                </p>
+
+                {/* Interactive Calculator Inputs */}
+                <div style={{ background: '#ffffff', border: '1px solid rgba(42, 26, 18, 0.12)', borderRadius: '14px', padding: '18px', marginBottom: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginBottom: '16px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#2a1a12', marginBottom: '4px' }}>
+                        Current Monthly Rent:
+                      </label>
+                      <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(42, 26, 18, 0.04)', borderRadius: '8px', border: '1px solid rgba(42, 26, 18, 0.15)', padding: '2px 8px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#5b4a3f', marginRight: '4px' }}>$</span>
+                        <input
+                          type="number"
+                          value={rentInput}
+                          onChange={(e) => setRentInput(Math.max(0, Number(e.target.value)))}
+                          style={{ width: '100%', background: 'none', border: 'none', outline: 'none', fontSize: '14px', fontWeight: 700, color: '#2a1a12', padding: '6px 0' }}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#2a1a12', marginBottom: '4px' }}>
+                        Service Method (Sec 88/90):
+                      </label>
+                      <select
+                        value={serviceMethod}
+                        onChange={(e) => setServiceMethod(e.target.value as any)}
+                        style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(42, 26, 18, 0.15)', fontSize: '12px', fontWeight: 600, background: '#ffffff', color: '#2a1a12' }}
+                      >
+                        <option value="door">Door Posting (+3d deemed)</option>
+                        <option value="person">In Person (Same day deemed)</option>
+                        <option value="mail">Registered Mail (+5d deemed)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: '#2a1a12', marginBottom: '4px' }}>
+                        Last Rent Increase Date:
+                      </label>
+                      <input
+                        type="date"
+                        value={calcLastIncrease}
+                        onChange={(e) => setCalcLastIncrease(e.target.value)}
+                        style={{ width: '100%', padding: '7px 10px', borderRadius: '8px', border: '1px solid rgba(42, 26, 18, 0.15)', fontSize: '12px', background: '#ffffff', color: '#2a1a12' }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Calculated Results Panel */}
+                  <div style={{ background: 'rgba(46, 107, 59, 0.05)', border: '1px solid rgba(46, 107, 59, 0.2)', borderRadius: '10px', padding: '14px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
+                      <div>
+                        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#8c7e75', fontWeight: 700, display: 'block' }}>2026 Allowable Cap</span>
+                        <strong style={{ fontSize: '16px', color: '#2e6b3b' }}>3.0%</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#8c7e75', fontWeight: 700, display: 'block' }}>Monthly Increase</span>
+                        <strong style={{ fontSize: '16px', color: '#2a1a12' }}>+${rentIncreaseAmount.toFixed(2)}</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#8c7e75', fontWeight: 700, display: 'block' }}>New Lawful Rent</span>
+                        <strong style={{ fontSize: '18px', color: '#3b2116', fontWeight: 800 }}>${newMaxRent.toFixed(2)}/mo</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '10px', textTransform: 'uppercase', color: '#8c7e75', fontWeight: 700, display: 'block' }}>Earliest Effective</span>
+                        <strong style={{ fontSize: '14px', color: '#2a1a12' }}>{rentDates.earliestEffective.toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })}</strong>
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(46, 107, 59, 0.15)', display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', color: '#3b2116', flexWrap: 'wrap', gap: '6px' }}>
+                      <span>Serve by: <strong>{rentDates.latestServiceDate.toLocaleDateString('en-CA', { month: 'long', day: 'numeric', year: 'numeric' })}</strong></span>
+                      <span>12-Month Rule: <strong>{rentDates.compliant12Months ? '✓ Compliant' : '⚠️ Warning: Under 12 Months'}</strong></span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form RTB-7 Notice Schedule Text Preview */}
+                <div style={{ background: '#ffffff', border: '1px solid rgba(42, 26, 18, 0.12)', borderRadius: '12px', padding: '14px', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <strong style={{ fontSize: '12.5px', color: '#2a1a12' }}>
+                      Official Form RTB-7 Notice Schedule:
+                    </strong>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={handleCopyRentCalc}
+                        style={{
+                          background: copiedRent ? '#2e6b3b' : 'rgba(59, 33, 22, 0.88)',
+                          color: '#ffffff',
+                          border: 'none',
+                          padding: '5px 12px',
+                          borderRadius: '999px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {copiedRent ? 'Copied ✓' : 'Copy Schedule'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDownloadRentSchedule}
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.85)',
+                          color: '#2a1a12',
+                          border: '1px solid rgba(42, 26, 18, 0.2)',
+                          padding: '5px 12px',
+                          borderRadius: '999px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Download (.txt) ↓
+                      </button>
+                    </div>
+                  </div>
+
+                  <pre style={{ margin: 0, padding: '10px', background: 'rgba(42, 26, 18, 0.03)', borderRadius: '8px', fontSize: '11px', fontFamily: 'monospace', color: '#3b2116', whiteSpace: 'pre-wrap', maxHeight: '160px', overflowY: 'auto' }}>
+                    {getRentScheduleText()}
+                  </pre>
+                </div>
+
+                {/* 4 Mandatory Rules */}
+                <div style={{ background: 'rgba(42, 26, 18, 0.04)', borderRadius: '10px', padding: '12px', fontSize: '11.5px', color: '#5b4a3f', lineHeight: 1.5 }}>
+                  <strong>Mandatory RTB Rules (Section 42 &amp; 43):</strong>
+                  <ul style={{ margin: '4px 0 0', paddingLeft: '18px' }}>
+                    <li>Must use the official, unaltered Form RTB-7 (Notice of Rent Increase - Residential).</li>
+                    <li>Notice must give at least 3 full rental payment months before the effective date.</li>
+                    <li>A landlord cannot round up rent to an amount exceeding the statutory 3.0% cap.</li>
+                    <li>Always retain a completed Form RTB-34 Proof of Service in your Private Property Vault.</li>
+                  </ul>
                 </div>
               </div>
             </div>
