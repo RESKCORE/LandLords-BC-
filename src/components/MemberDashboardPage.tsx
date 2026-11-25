@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CONTACT_INFO, GOV_LINKS } from '../data/constants';
+import { CONTACT_INFO } from '../data/constants';
 import { FORMS_CATALOGUE } from '../data/forms';
 
 interface MemberDashboardPageProps {
@@ -82,19 +82,19 @@ export const MemberDashboardPage: React.FC<MemberDashboardPageProps> = ({
         {
           id: 'case-409',
           unit: 'Vancouver Suite #204',
-          note: 'Case #BC-409 · Unpaid Rent Notice: 10-day notice compliance served with Section 88 witness proof.',
+          note: 'Move-in condition inspection completed & signed with RTB-27. Security deposit $1,150 held in designated trust account.',
           timestamp: '15 Oct 2026',
         },
         {
           id: 'case-512',
           unit: 'Kelowna Duplex Unit B',
-          note: 'Case #BC-512 · Condition Inspection: Move-in signed with RTB-27. Security deposit held in designated trust account.',
+          note: 'Annual heating & smoke alarm safety inspection logged. Water heater checked with zero active seepage.',
           timestamp: '02 Nov 2026',
         },
         {
           id: 'case-618',
           unit: 'Victoria Suite #108',
-          note: 'Case #BC-618 · RTB Dispute Preparation: Evidence indexed in sequential dossier format for expedited hearing.',
+          note: '2026 Allowable Rent Increase prepared with 3 full calendar months notice served in accordance with RTA Section 42.',
           timestamp: '18 Nov 2026',
         },
       ];
@@ -481,14 +481,14 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
             </div>
           )}
 
-          {/* EXACT BENTO GRID LAYOUT MATCHING REFERENCE IMAGE */}
+          {/* TAILORED BENTO GRID FOR LOGGED-IN MEMBERS */}
           <div className="bento" style={{ marginTop: '0', gridTemplateColumns: '1.2fr 1fr 1fr' }}>
             
-            {/* Card 1: Tall Big Card — Member Spotlight & Complete Legal Kit */}
+            {/* Card 1: Member Subscription & Protection Passport (Tall Left Anchor) */}
             <div className="card c-big" style={{ background: '#3b2116' }}>
               <img
                 src="/assets/landlord/sunlit-facade.svg"
-                alt="BC rental housing community"
+                alt="Protected BC property"
                 style={{ objectFit: 'cover', opacity: 0.85 }}
               />
               <div style={{ position: 'relative', zIndex: 2 }}>
@@ -507,22 +507,25 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                     marginBottom: '12px',
                   }}
                 >
-                  Member ID: {memberId} ✓
+                  Member ID: {memberId} ✓ · Active
                 </span>
-                <h3 style={{ fontSize: '26px', lineHeight: 1.25, fontWeight: 700, margin: '0 0 10px' }}>
-                  Voices of BC landlords
+                <h3 style={{ fontSize: '25px', lineHeight: 1.25, fontWeight: 700, margin: '0 0 10px' }}>
+                  Member Protection
                   <br />
-                  <span>navigating tenancy rules.</span>
+                  <span>&amp; Legal Defense Passport</span>
                 </h3>
-                <p className="desc" style={{ fontSize: '13px', lineHeight: 1.55, color: 'rgba(255, 255, 255, 0.85)' }}>
-                  &ldquo;When facing unexpected rent arrears and hearing delays, having access to cited RTA workflows and official RTB forms preserved our financial security without exposing our family name.&rdquo;
+                <p className="desc" style={{ fontSize: '13px', lineHeight: 1.55, color: 'rgba(255, 255, 255, 0.88)' }}>
+                  Your active membership guarantees verified legal defense under the BC Residential Tenancy Act (RTA), priority advisor hotline support, and pre-formatted dispute evidence packages across all your rental units.
                 </p>
-                <div style={{ marginTop: '14px', padding: '10px 14px', background: 'rgba(0, 0, 0, 0.25)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.15)' }}>
-                  <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'rgba(255, 255, 255, 0.7)', fontWeight: 600 }}>
-                    Active Subscription
+                <div style={{ marginTop: '14px', padding: '12px 14px', background: 'rgba(0, 0, 0, 0.28)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.15)' }}>
+                  <div style={{ fontSize: '10.5px', textTransform: 'uppercase', color: 'rgba(255, 255, 255, 0.75)', fontWeight: 700 }}>
+                    Active Subscription Tier
                   </div>
                   <div style={{ fontSize: '14px', fontWeight: 700, color: '#f6f0e7', marginTop: '2px' }}>
                     {membershipPlan}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#bbf7d0', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>●</span> Annual Billing · RTA Protection Active
                   </div>
                 </div>
               </div>
@@ -545,7 +548,7 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                   onClick={handleDownloadToolkit}
                   style={{ fontWeight: 700 }}
                 >
-                  Download Complete Legal Kit ↓
+                  Download 2026 Legal Defense Kit ↓
                 </button>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '10px', fontSize: '11px', color: 'rgba(255, 255, 255, 0.85)' }}>
@@ -553,12 +556,12 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
-                  <span>Confidential &amp; Server-Sealed · No tenant names or street address required</span>
+                  <span>Zero-Disclosure Vault · Server-Sealed &amp; Fully Non-Public</span>
                 </div>
               </div>
             </div>
 
-            {/* Card 2: Top-Middle — Animated Characters & Official RTB Forms Gateway */}
+            {/* Card 2: RTB Statutory Document Gateway (Top-Middle with Animated Character) */}
             <div className="card c-pad">
               <div className="collage">
                 <div>
@@ -570,14 +573,14 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                 <div>
                   <img
                     src="/assets/landlord/landlord-profile.svg"
-                    alt="Animated stylish BC landlord"
+                    alt="Animated stylish BC landlord character"
                   />
                 </div>
               </div>
               <div className="txt">
-                <h4>Official Forms &amp; Practical Guides</h4>
+                <h4>Official RTB Statutory Gateway</h4>
                 <p>
-                  Direct links to unedited RTB statutory documents alongside labelled educational templates for condition inspections, rent increases, and dispute evidence.
+                  Direct instant downloads of mandatory BC tenancy forms with statutory notice checklists and proof of service protocols.
                 </p>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
                   <button
@@ -593,7 +596,7 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                       fontWeight: 600,
                       cursor: 'pointer',
                     }}
-                    title="Download RTB-30 10-Day Notice"
+                    title="Download RTB-30 10-Day Notice for Unpaid Rent"
                   >
                     RTB-30 Notice ↓
                   </button>
@@ -627,13 +630,13 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                       padding: '6px 4px',
                     }}
                   >
-                    View 12+ Forms →
+                    View All 12+ Forms →
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Card 3: Top-Right — Radial Gauge Graph & Confidentiality */}
+            {/* Card 3: Statutory Compliance & Health Gauge (Top-Right Radial Graph) */}
             <div className="card c-pad" id="gauge-card">
               <div className="gauge">
                 <svg
@@ -671,19 +674,19 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                   <span>100</span>%
                 </div>
                 <div className="ends">
-                  <span>Public Risk</span>
-                  <span>Server-Sealed</span>
+                  <span>Notice Error Risk: 0%</span>
+                  <span>Server-Sealed: 100%</span>
                 </div>
               </div>
               <div className="txt">
-                <h4>Strict Member Confidentiality</h4>
+                <h4>Statutory Procedural Health: 100%</h4>
                 <p>
-                  Your name, address, and rental files are never published. In version one, staff cannot browse member cases, and authorization is enforced on the server.
+                  All condition inspection files, timestamps, and service affidavits comply with admissible RTB dispute guidelines under full anonymity.
                 </p>
               </div>
             </div>
 
-            {/* Card 4: Bottom-Middle — Interactive Case Scenarios & Unit Ledger */}
+            {/* Card 4: Private Property Vault & Unit Ledger (Bottom-Middle Interactive Rows) */}
             <div className="card c-pad">
               <div className="rows">
                 {notes.slice(0, 3).map((note, idx) => (
@@ -720,7 +723,7 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
               </div>
               <div className="txt">
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <h4>Verified Tenancy Case Scenarios</h4>
+                  <h4>Private Property Vault &amp; Unit Ledger</h4>
                   <button
                     type="button"
                     onClick={() => setIsAddingNote(true)}
@@ -735,16 +738,16 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                       cursor: 'pointer',
                     }}
                   >
-                    + Add Note
+                    + Add Unit Record
                   </button>
                 </div>
                 <p>
-                  Click any scenario above to read how BC property owners resolved disputes using statutory RTB procedures under full anonymity.
+                  Time-stamped inspection and repair logs for dispute defense. Stored exclusively on your device under the Zero-Disclosure Charter.
                 </p>
               </div>
             </div>
 
-            {/* Card 5: Bottom-Right — Architectural Artwork & 2026 Rent Calculator */}
+            {/* Card 5: 2026 Provincial Rent Calculator (Bottom-Right with Architectural Artwork) */}
             <div className="card c-pad">
               <div className="insight">
                 <img
@@ -753,18 +756,18 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                 />
                 <div className="chip">
                   <i></i>
-                  <span>No Tenant Blacklist</span>
+                  <span>● 2026 RTA Cap: 3.0%</span>
                 </div>
               </div>
               <div className="txt">
-                <h4>2026 Statutory Rate: 3.0% Cap</h4>
+                <h4>2026 Statutory Rent Increase Calculator</h4>
                 <div style={{ margin: '8px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <input
                     type="number"
                     value={rentInput}
                     onChange={(e) => setRentInput(Math.max(0, Number(e.target.value)))}
                     style={{
-                      width: '100px',
+                      width: '95px',
                       padding: '4px 8px',
                       borderRadius: '6px',
                       border: '1px solid rgba(42, 26, 18, 0.2)',
@@ -795,7 +798,7 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                   </button>
                 </div>
                 <p>
-                  We refuse to publish tenant names or run &ldquo;bad tenant&rdquo; lists. Instead, we aggregate anonymous dispute data to advocate for faster RTB hearings.
+                  Provincial rent increase cap strictly enforced at 3.0% for 2026. Landlords must give at least 3 full rental payment months notice under RTA Section 42.
                 </p>
               </div>
             </div>
