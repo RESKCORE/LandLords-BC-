@@ -10,7 +10,7 @@ export default async function handler(req, res) {
 
   const { email, plan } = req.body || {};
   const targetEmail = (email || '').trim().toLowerCase();
-  const planName = plan || 'Individual Membership ($290 CAD / year)';
+  const planName = plan || 'Individual Membership ($290 CAD / month)';
 
   if (!targetEmail || !targetEmail.includes('@')) {
     return res.status(400).json({ error: 'Valid email required' });

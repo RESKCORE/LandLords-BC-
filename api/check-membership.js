@@ -43,10 +43,15 @@ export default async function handler(req, res) {
           c.paid
       );
       if (matched) {
-        const isPM = matched.amount >= 50000;
+        const isCustom = matched.amount >= 90000;
+        const isPM = matched.amount >= 50000 && !isCustom;
         return res.status(200).json({
           isMember: true,
-          plan: isPM ? 'Property Manager Membership ($590 CAD / year)' : 'Individual Membership ($290 CAD / year)',
+          plan: isCustom
+            ? 'Custom Portfolio Membership ($999 CAD / year)'
+            : isPM
+            ? 'Property Manager Membership ($590 CAD / year)'
+            : 'Individual Membership ($290 CAD / month)',
           memberId: `BC-MEM-${matched.id.slice(-4).toUpperCase()}`,
           email: cleanEmail,
           status: 'active',

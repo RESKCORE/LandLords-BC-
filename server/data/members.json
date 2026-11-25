@@ -1,16 +1,8 @@
 [
   {
-    "email": "test@mail.com",
-    "name": "test",
-    "plan": "individual",
-    "memberId": "BC-MEM-5860",
-    "status": "active",
-    "joinedAt": "2026-11-25T16:37:14.249Z"
-  },
-  {
     "email": "manoj.ardenttech@gmail.com",
     "name": "manoj",
-    "plan": "Landlords BC — Property Manager Membership",
+    "plan": "Landlords BC — Property Manager Membership ($590 CAD / year)",
     "memberId": "BC-MEM-MUF7",
     "status": "active",
     "joinedAt": "2026-11-25T16:54:19.317Z"
@@ -18,16 +10,16 @@
   {
     "email": "reddysantoshh@gmail.com",
     "name": "SK",
-    "plan": "Landlords BC — Individual Membership",
+    "plan": "Landlords BC — Individual Membership ($290 CAD / month)",
     "memberId": "BC-MEM-71OL",
     "status": "active",
     "joinedAt": "2026-11-25T16:54:32.415Z"
   },
   {
     "email": "reddysantosh1310@gmail.com",
-    "name": "reddysantosh1310",
-    "plan": "Individual Membership ( CAD / year)",
-    "memberId": "BC-MEM-2313",
+    "name": "Santosh Reddy",
+    "plan": "Property Manager Membership ($590 CAD / year)",
+    "memberId": "BC-MEM-8421",
     "status": "active",
     "joinedAt": "2026-11-25T16:49:16.187Z"
   }

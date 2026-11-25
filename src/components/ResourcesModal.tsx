@@ -377,7 +377,7 @@ Zero-Disclosure Charter: Verified Confidential & Proprietary Document.`;
                       onSelectPlan('individual');
                     }}
                   >
-                    Unlock Full Member Kit ($290 CAD) →
+                    Unlock Full Member Kit ($290 CAD/mo) →
                   </button>
                 )}
               </div>

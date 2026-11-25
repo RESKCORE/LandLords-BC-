@@ -88,7 +88,7 @@ export const NEWS_ARTICLES: NewsArticle[] = [
     summary:
       'Announcing transparent annual CAD pricing, zero-disclosure privacy commitments, and tailored tiers for independent homeowners and portfolio professionals.',
     body: [
-      'We are proud to introduce our two primary annual membership plans, billed transparently in Canadian Dollars without hidden charges: the Individual Plan ($290 CAD/year) and the Property Manager Plan ($590 CAD/year).',
+      'We are proud to introduce our membership plans, billed transparently in Canadian Dollars without hidden charges: the Individual Plan ($290 CAD/month), the Property Manager Plan ($590 CAD/year), and the Custom Portfolio Plan ($999 CAD/year).',
       'The Individual Plan is engineered specifically for homeowners who personally manage secondary suites, condos, or single-family rental properties. It provides full access to our RTA guides, official form links, condition inspection workflows, and private documentation vaults.',
       'The Property Manager Plan adds multi-portfolio record structures, a dedicated professional community forum, and aggregated advocacy reporting to support provincial submissions to the Residential Tenancy Branch.',
       'In alignment with our privacy charter, account enrollment does not require tenant names, tenant phone numbers, or your property civic address. All payment processing is secured through Stripe with instant email confirmation.',

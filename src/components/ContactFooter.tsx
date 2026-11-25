@@ -181,12 +181,17 @@ export const ContactFooter: React.FC<ContactFooterProps> = ({
               <ul>
                 <li>
                   <a href="#pricing" onClick={(e) => handleLinkClick(e, '#pricing')}>
-                    Individual Plan ($290 CAD)
+                    Individual Plan ($290 CAD / mo)
                   </a>
                 </li>
                 <li>
                   <a href="#pricing" onClick={(e) => handleLinkClick(e, '#pricing')}>
-                    Property Manager Plan ($590 CAD)
+                    Property Manager Plan ($590 CAD / yr)
+                  </a>
+                </li>
+                <li>
+                  <a href="#pricing" onClick={(e) => handleLinkClick(e, '#pricing')}>
+                    Custom Portfolio Plan ($999 CAD / yr)
                   </a>
                 </li>
                 <li>

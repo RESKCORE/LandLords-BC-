@@ -48,7 +48,7 @@ export const MemberDashboardPage: React.FC<MemberDashboardPageProps> = ({
   const [userEmail, setUserEmail] = useState('member@landlordsbc.org');
   const [userName, setUserName] = useState('Verified BC Landlord');
   const [memberId, setMemberId] = useState('BC-MEM-8421');
-  const [membershipPlan, setMembershipPlan] = useState('Individual Membership ($290 CAD / year)');
+  const [membershipPlan, setMembershipPlan] = useState('Individual Membership ($290 CAD / month)');
   const [downloadNotice, setDownloadNotice] = useState(false);
 
   // Stripe Sandbox / Test Mode Payments state
@@ -59,13 +59,16 @@ export const MemberDashboardPage: React.FC<MemberDashboardPageProps> = ({
 
   // Helper to format plan tier names cleanly
   const formatPlanName = (plan: string) => {
-    if (!plan) return 'Individual Membership ($290 CAD / year)';
+    if (!plan) return 'Individual Membership ($290 CAD / month)';
     const lower = plan.toLowerCase();
+    if (lower.includes('custom') || lower.includes('999') || lower.includes('990')) {
+      return 'Custom Portfolio Membership ($999 CAD / year)';
+    }
     if (lower.includes('property') || lower.includes('590') || lower === 'property-manager') {
       return 'Property Manager Membership ($590 CAD / year)';
     }
     if (lower.includes('individual') || lower.includes('290')) {
-      return 'Individual Membership ($290 CAD / year)';
+      return 'Individual Membership ($290 CAD / month)';
     }
     return plan;
   };
@@ -73,6 +76,9 @@ export const MemberDashboardPage: React.FC<MemberDashboardPageProps> = ({
   // Helper for natural grammatical greeting copy
   const formatPlanGrammatical = (plan: string) => {
     const lower = (plan || '').toLowerCase();
+    if (lower.includes('custom') || lower.includes('999') || lower.includes('990')) {
+      return 'Custom Portfolio membership';
+    }
     if (lower.includes('property') || lower.includes('590') || lower === 'property-manager') {
       return 'Property Manager membership';
     }
@@ -114,12 +120,21 @@ export const MemberDashboardPage: React.FC<MemberDashboardPageProps> = ({
   const [copiedRentSchedule, setCopiedRentSchedule] = useState(false);
 
   // Computed plan pricing & CRA classification
+  const isCustom =
+    membershipPlan.toLowerCase().includes('custom') ||
+    membershipPlan.toLowerCase().includes('999') ||
+    membershipPlan.toLowerCase().includes('990');
   const isPM =
     membershipPlan.toLowerCase().includes('property') ||
     membershipPlan.toLowerCase().includes('590') ||
     membershipPlan.toLowerCase() === 'property-manager';
-  const subtotal = isPM ? 590.0 : 290.0;
-  const planTitle = isPM
+
+  const subtotal = isCustom ? 999.0 : isPM ? 590.0 : 290.0;
+  const planBillingCycle = isCustom ? 'Annual' : isPM ? 'Annual' : 'Monthly';
+  const planBillingCycleLower = isCustom ? 'year' : isPM ? 'year' : 'month';
+  const planTitle = isCustom
+    ? 'Custom Portfolio Membership'
+    : isPM
     ? 'Property Manager Membership'
     : 'Individual Landlord Membership';
   const invoiceNumber = `LBC-INV-${memberId.replace('BC-MEM-', '')}-2026`;
@@ -139,10 +154,12 @@ export const MemberDashboardPage: React.FC<MemberDashboardPageProps> = ({
         setStripePayments(data.payments);
         if (data.payments.length > 0) {
           const latest = data.payments[0];
-          if (latest.amount >= 500) {
+          if (latest.amount >= 900) {
+            setMembershipPlan('Custom Portfolio Membership ($999 CAD / year)');
+          } else if (latest.amount >= 500) {
             setMembershipPlan('Property Manager Membership ($590 CAD / year)');
           } else if (latest.amount >= 200) {
-            setMembershipPlan('Individual Membership ($290 CAD / year)');
+            setMembershipPlan('Individual Membership ($290 CAD / month)');
           }
         }
       } else {
@@ -1093,7 +1110,7 @@ Vancouver, British Columbia, Canada
                   </div>
                   <div style={{ fontSize: '11px', color: '#bbf7d0', marginTop: '4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px', flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span>●</span> Annual Billing · RTA Protection Active
+                      <span>●</span> {planBillingCycle} Billing · RTA Protection Active
                     </div>
                     <button
                       type="button"
@@ -1517,7 +1534,7 @@ Vancouver, British Columbia, Canada
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '10.5px', color: '#5b4a3f' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {stripePayments.length > 0 ? (stripePayments[0].description || planTitle) : 'Annual Membership Dues'}
+                      {stripePayments.length > 0 ? (stripePayments[0].description || planTitle) : `${planBillingCycle} Membership Dues`}
                     </span>
                     <strong style={{ color: '#2a1a12' }}>
                       ${(stripePayments.length > 0 ? stripePayments[0].amount : subtotal).toFixed(2)} CAD
@@ -1544,7 +1561,7 @@ Vancouver, British Columbia, Canada
                   }}
                 >
                   <span style={{ fontSize: '11px', fontWeight: 600, color: '#2a1a12' }}>
-                    {stripePayments.length > 0 ? 'Total Paid (Stripe CAD):' : 'Total Paid (Annual):'}
+                    {stripePayments.length > 0 ? 'Total Paid (Stripe CAD):' : `Total Paid (${planBillingCycle}):`}
                   </span>
                   <strong style={{ fontSize: '14px', color: '#2a1a12', fontWeight: 800 }}>
                     ${(stripePayments.length > 0 ? stripePayments[0].amount : subtotal).toFixed(2)} CAD
@@ -3047,11 +3064,11 @@ Vancouver, British Columbia, Canada
                   {/* Line Items Table */}
                   <div style={{ marginBottom: '12px' }}>
                     <div style={{ fontSize: '10.5px', textTransform: 'uppercase', color: '#8c7e75', fontWeight: 700, marginBottom: '6px' }}>
-                      Itemized Annual Subscription Charges:
+                      Itemized {planBillingCycle} Subscription Charges:
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid rgba(42, 26, 18, 0.04)' }}>
-                        <span>1. {stripePayments.length > 0 && stripePayments[0].description ? stripePayments[0].description : `${planTitle} (2026 Annual Access)`}</span>
+                        <span>1. {stripePayments.length > 0 && stripePayments[0].description ? stripePayments[0].description : `${planTitle} (2026 ${planBillingCycle} Access)`}</span>
                         <strong style={{ color: '#2a1a12' }}>
                           ${(stripePayments.length > 0 ? stripePayments[0].amount : subtotal).toFixed(2)} CAD
                         </strong>

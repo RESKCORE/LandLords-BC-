@@ -38,7 +38,7 @@ export default async function handler(req, res) {
     const planName =
       session.line_items?.data[0]?.description ||
       session.metadata?.plan ||
-      'Landlords BC Annual Membership';
+      'Individual Membership ($290 CAD / month)';
 
     const memberId = `BC-MEM-${session.id.slice(-4).toUpperCase()}`;
 

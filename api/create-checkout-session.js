@@ -30,41 +30,44 @@ export default async function handler(req, res) {
       plan = 'individual',
       email,
       returnUrl,
-      interval = 'year', // 'month' or 'year'
-      billingType = 'recurring', // 'recurring' (subscription) or 'one_time'
+      interval, // 'month' or 'year' (if omitted, inferred from plan)
+      billingType = 'recurring',
     } = req.body || {};
 
     const protocol = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers['x-forwarded-host'] || req.headers.host;
     const origin = returnUrl || req.headers.origin || `${protocol}://${host}`;
 
-    const isMonthly = interval === 'month';
-    const isSubscription = billingType === 'recurring';
-
+    // Pricing Architecture:
+    // Individual: $290 CAD / month
+    // Property Manager: $590 CAD / year
+    // Custom Portfolio: $999 CAD / year
     const planDetails = {
       individual: {
         name: 'Landlords BC — Individual Membership',
-        amount: 29000, // $290.00 CAD / year
-        monthlyAmount: 2900, // $29.00 CAD / month
-        description: 'Self-managing landlord membership & confidential defense under the BC RTA.',
+        amount: 29000, // $290.00 CAD
+        defaultInterval: 'month',
+        description: 'Monthly self-managing landlord membership & confidential defense under the BC RTA.',
       },
       'property-manager': {
         name: 'Landlords BC — Property Manager Membership',
-        amount: 59000, // $590.00 CAD / year
-        monthlyAmount: 5900, // $59.00 CAD / month
-        description: 'Professional property manager tier with multi-unit records and advocacy reporting.',
+        amount: 59000, // $590.00 CAD
+        defaultInterval: 'year',
+        description: 'Annual professional property manager tier with multi-unit records and advocacy reporting.',
       },
       custom: {
         name: 'Landlords BC — Custom Portfolio Membership',
-        amount: 99000, // $990.00 CAD / year
-        monthlyAmount: 9900, // $99.00 CAD / month
-        description: 'Bespoke multi-unit portfolio regulatory support & private helpline priority.',
+        amount: 99900, // $999.00 CAD
+        defaultInterval: 'year',
+        description: 'Annual bespoke multi-unit portfolio regulatory support & private helpline priority.',
       },
     };
 
     const selected = planDetails[plan] || planDetails.individual;
-    const unitAmount = isMonthly ? selected.monthlyAmount : selected.amount;
+    const activeInterval = interval || selected.defaultInterval;
+    const isMonthly = activeInterval === 'month';
     const intervalLabel = isMonthly ? 'Monthly' : 'Annual';
+    const isSubscription = billingType === 'recurring';
 
     // Find or create customer to bind the payment to their persistent Stripe profile
     let customerId;
@@ -94,7 +97,7 @@ export default async function handler(req, res) {
               name: `${selected.name} (${intervalLabel})`,
               description: `${selected.description} · 100% Tax Deductible (CRA Form T776 Line 8810)`,
             },
-            unit_amount: unitAmount,
+            unit_amount: selected.amount,
             ...(isSubscription
               ? {
                   recurring: {
@@ -111,7 +114,7 @@ export default async function handler(req, res) {
       customer_email: customerId ? undefined : email && email.includes('@') ? email : undefined,
       metadata: {
         plan,
-        interval: isMonthly ? 'month' : 'year',
+        interval: activeInterval,
         source: 'landlords-bc',
       },
       success_url: `${origin}/?status=success&session_id={CHECKOUT_SESSION_ID}`,
@@ -123,7 +126,7 @@ export default async function handler(req, res) {
         description: `${selected.name} (${intervalLabel}) · 100% Tax Deductible (CRA Form T776 Line 8810)`,
         metadata: {
           plan,
-          interval: isMonthly ? 'month' : 'year',
+          interval: activeInterval,
         },
       };
     } else {
@@ -145,7 +148,8 @@ export default async function handler(req, res) {
       url: session.url,
       sessionId: session.id,
       mode: sessionParams.mode,
-      interval: isMonthly ? 'month' : 'year',
+      interval: activeInterval,
+      amount: selected.amount / 100,
     });
   } catch (error) {
     console.error('Stripe Checkout Error:', error);

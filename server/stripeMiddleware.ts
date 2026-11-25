@@ -80,45 +80,44 @@ export function stripePlugin() {
               plan = 'individual',
               email,
               returnUrl,
-              interval = 'year',
+              interval,
               billingType = 'recurring',
             } = JSON.parse(body || '{}');
 
             const origin =
               returnUrl || req.headers.origin || 'http://localhost:3000';
 
-            const isMonthly = interval === 'month';
-            const isSubscription = billingType === 'recurring';
-
             const planDetails: Record<
               string,
-              { name: string; amount: number; monthlyAmount: number; description: string }
+              { name: string; amount: number; defaultInterval: 'month' | 'year'; description: string }
             > = {
               individual: {
                 name: 'Landlords BC — Individual Membership',
-                amount: 29000, // $290.00 CAD / year
-                monthlyAmount: 2900, // $29.00 CAD / month
+                amount: 29000, // $290.00 CAD / month
+                defaultInterval: 'month',
                 description:
-                  'Self-managing landlord membership & confidential defense under the BC RTA.',
+                  'Monthly self-managing landlord membership & confidential defense under the BC RTA.',
               },
               'property-manager': {
                 name: 'Landlords BC — Property Manager Membership',
                 amount: 59000, // $590.00 CAD / year
-                monthlyAmount: 5900, // $59.00 CAD / month
+                defaultInterval: 'year',
                 description:
-                  'Professional property manager tier with multi-unit records and advocacy reporting.',
+                  'Annual professional property manager tier with multi-unit records and advocacy reporting.',
               },
               custom: {
                 name: 'Landlords BC — Custom Portfolio Membership',
-                amount: 99000, // $990.00 CAD / year
-                monthlyAmount: 9900, // $99.00 CAD / month
+                amount: 99900, // $999.00 CAD / year
+                defaultInterval: 'year',
                 description:
-                  'Bespoke multi-unit portfolio regulatory support & private helpline priority.',
+                  'Annual bespoke multi-unit portfolio regulatory support & private helpline priority.',
               },
             };
 
             const selected = planDetails[plan] || planDetails.individual;
-            const unitAmount = isMonthly ? selected.monthlyAmount : selected.amount;
+            const activeInterval = (interval as 'month' | 'year') || selected.defaultInterval;
+            const isMonthly = activeInterval === 'month';
+            const isSubscription = billingType === 'recurring';
             const intervalLabel = isMonthly ? 'Monthly' : 'Annual';
 
             // Find or create customer to bind the payment to their persistent Stripe profile
@@ -149,11 +148,11 @@ export function stripePlugin() {
                       name: `${selected.name} (${intervalLabel})`,
                       description: `${selected.description} · 100% Tax Deductible (CRA Form T776 Line 8810)`,
                     },
-                    unit_amount: unitAmount,
+                    unit_amount: selected.amount,
                     ...(isSubscription
                       ? {
                           recurring: {
-                            interval: isMonthly ? 'month' : 'year',
+                            interval: activeInterval,
                           },
                         }
                       : {}),
@@ -166,7 +165,7 @@ export function stripePlugin() {
               customer_email: customerId ? undefined : email && email.includes('@') ? email : undefined,
               metadata: {
                 plan,
-                interval: isMonthly ? 'month' : 'year',
+                interval: activeInterval,
                 source: 'landlords-bc',
               },
               success_url: `${origin}/?status=success&session_id={CHECKOUT_SESSION_ID}`,
@@ -178,7 +177,7 @@ export function stripePlugin() {
                 description: `${selected.name} (${intervalLabel}) · 100% Tax Deductible (CRA Form T776 Line 8810)`,
                 metadata: {
                   plan,
-                  interval: isMonthly ? 'month' : 'year',
+                  interval: activeInterval,
                 },
               };
             } else {
@@ -203,7 +202,8 @@ export function stripePlugin() {
                 url: session.url,
                 sessionId: session.id,
                 mode: sessionParams.mode,
-                interval: isMonthly ? 'month' : 'year',
+                interval: activeInterval,
+                amount: selected.amount / 100,
               })
             );
           } catch (error: any) {
@@ -288,7 +288,7 @@ export function stripePlugin() {
             const targetEmail =
               email || process.env.HOST_EMAIL || 'reddysantosh1310@gmail.com';
             const planName =
-              plan || 'Individual Membership ($290 CAD / year)';
+              plan || 'Individual Membership ($290 CAD / month)';
 
             // Record as active member
             const memberId = `BC-MEM-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -362,7 +362,7 @@ export function stripePlugin() {
             const planName =
               session.line_items?.data[0]?.description ||
               session.metadata?.plan ||
-              'Landlords BC Annual Membership';
+              'Individual Membership ($290 CAD / month)';
 
             const memberId = `BC-MEM-${session.id.slice(-4).toUpperCase()}`;
 
@@ -458,7 +458,7 @@ export function stripePlugin() {
               res.end(
                 JSON.stringify({
                   isMember: true,
-                  plan: found.plan || 'Individual Membership ($290 CAD / year)',
+                  plan: found.plan || 'Individual Membership ($290 CAD / month)',
                   memberId: found.memberId || 'BC-MEM-7740',
                   email: found.email,
                   status: found.status,
@@ -481,10 +481,13 @@ export function stripePlugin() {
                     c.paid
                 );
                 if (matched) {
-                  const isPM = matched.amount >= 50000;
-                  const plan = isPM
+                  const isCustom = matched.amount >= 90000;
+                  const isPM = matched.amount >= 50000 && !isCustom;
+                  const plan = isCustom
+                    ? 'Custom Portfolio Membership ($999 CAD / year)'
+                    : isPM
                     ? 'Property Manager Membership ($590 CAD / year)'
-                    : 'Individual Membership ($290 CAD / year)';
+                    : 'Individual Membership ($290 CAD / month)';
                   const memberId = `BC-MEM-${matched.id.slice(-4).toUpperCase()}`;
                   saveMember({
                     email: cleanEmail,
@@ -508,7 +511,7 @@ export function stripePlugin() {
                   );
                   return;
                 }
-              } catch (_) {}
+              } catch (_) { }
             }
 
             res.statusCode = 200;
@@ -550,7 +553,7 @@ export function stripePlugin() {
             const member = {
               email: cleanEmail,
               name: name || cleanEmail.split('@')[0],
-              plan: plan || 'Individual Membership ($290 CAD / year)',
+              plan: plan || 'Individual Membership ($290 CAD / month)',
               memberId,
               status: 'active',
               joinedAt: new Date().toISOString(),
@@ -643,14 +646,20 @@ export function stripePlugin() {
             );
 
             if (!hasPaidInvoice) {
-              const planName = plan || 'Individual Membership ($290 CAD / year)';
+              const planName = plan || 'Individual Membership ($290 CAD / month)';
+              const isCustom =
+                planName.toLowerCase().includes('custom') ||
+                planName.toLowerCase().includes('999') ||
+                planName.toLowerCase().includes('990');
               const isPM =
                 planName.toLowerCase().includes('property') ||
                 planName.toLowerCase().includes('590');
-              const amount = isPM ? 59000 : 29000;
-              const planDesc = isPM
+              const amount = isCustom ? 99900 : isPM ? 59000 : 29000;
+              const planDesc = isCustom
+                ? 'Landlords BC — Custom Portfolio Membership (Annual Bespoke RTA Protection & 6+ Unit Defense)'
+                : isPM
                 ? 'Landlords BC — Property Manager Membership (Annual RTA Protection & Multi-Unit Defense)'
-                : 'Landlords BC — Individual Landlord Membership (Annual RTA Protection & Statutory Defense)';
+                : 'Landlords BC — Individual Landlord Membership (Monthly RTA Protection & Statutory Defense)';
 
               // Create invoice
               const newInvoice = await stripe.invoices.create({
@@ -731,7 +740,7 @@ export function stripePlugin() {
               try {
                 const parsed = JSON.parse(body);
                 email = parsed.email || '';
-              } catch (_) {}
+              } catch (_) { }
             }
 
             const cleanEmail = (email || '').trim().toLowerCase();

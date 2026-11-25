@@ -184,7 +184,7 @@ export const Hero: React.FC<HeroProps> = ({
                       cursor: 'pointer',
                     }}
                   >
-                    Join from $290 CAD
+                    Join from $290 CAD / mo
                   </button>
                 )}
               </div>

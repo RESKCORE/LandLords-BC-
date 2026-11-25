@@ -37,7 +37,7 @@ const FAQS: FAQItem[] = [
   {
     question: 'How are membership fees processed, and what currency is used?',
     answer:
-      'All membership plans—Individual ($290 CAD/year) and Property Manager ($590 CAD/year)—are processed securely through Stripe in Canadian Dollars (CAD). Members receive immediate automated tax receipts and full access to unedited statutory legal kits.',
+      'All membership plans—Individual ($290 CAD/month), Property Manager ($590 CAD/year), and Custom Portfolio ($999 CAD/year)—are processed securely through Stripe in Canadian Dollars (CAD). Members receive immediate automated tax receipts and full access to unedited statutory legal kits.',
   },
 ];
 

@@ -70,14 +70,20 @@ export default async function handler(req, res) {
     );
 
     if (!hasPaidInvoice) {
-      const planName = plan || 'Individual Membership ($290 CAD / year)';
+      const planName = plan || 'Individual Membership ($290 CAD / month)';
+      const isCustom =
+        planName.toLowerCase().includes('custom') ||
+        planName.toLowerCase().includes('999') ||
+        planName.toLowerCase().includes('990');
       const isPM =
         planName.toLowerCase().includes('property') ||
         planName.toLowerCase().includes('590');
-      const amount = isPM ? 59000 : 29000;
-      const planDesc = isPM
+      const amount = isCustom ? 99900 : isPM ? 59000 : 29000;
+      const planDesc = isCustom
+        ? 'Landlords BC — Custom Portfolio Membership (Annual Bespoke RTA Protection & 6+ Unit Defense)'
+        : isPM
         ? 'Landlords BC — Property Manager Membership (Annual RTA Protection & Multi-Unit Defense)'
-        : 'Landlords BC — Individual Landlord Membership (Annual RTA Protection & Statutory Defense)';
+        : 'Landlords BC — Individual Landlord Membership (Monthly RTA Protection & Statutory Defense)';
 
       // Create invoice
       const newInvoice = await stripe.invoices.create({

@@ -79,7 +79,7 @@ export default function App() {
     try {
       const plan =
         localStorage.getItem('pending_checkout_plan') ||
-        'Individual Membership ($290 CAD / year)';
+        'Individual Membership ($290 CAD / month)';
       await fetch('/api/send-welcome-receipt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -103,7 +103,7 @@ export default function App() {
 
     let detectedPlan =
       localStorage.getItem('pending_checkout_plan') ||
-      'Individual Membership ($290 CAD / year)';
+      'Individual Membership ($290 CAD / month)';
     let detectedMemberId =
       localStorage.getItem('landlords_member_id') || 'BC-MEM-8421';
     let isIdentified = false;
@@ -332,7 +332,7 @@ export default function App() {
 
       const planName =
         localStorage.getItem('pending_checkout_plan') ||
-        'Individual Membership ($290 CAD / year)';
+        'Individual Membership ($290 CAD / month)';
       const memberId =
         localStorage.getItem('landlords_member_id') ||
         `BC-MEM-${Math.floor(1000 + Math.random() * 9000)}`;

@@ -240,6 +240,8 @@ export const Modal: React.FC<ModalProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           plan: selectedPlan,
+          interval: selectedPlan === 'individual' ? 'month' : 'year',
+          billingType: 'recurring',
           email: trimmedEmail,
           returnUrl: window.location.origin,
         }),
@@ -725,13 +727,13 @@ export const Modal: React.FC<ModalProps> = ({
                     onChange={(e) => setSelectedPlan(e.target.value)}
                   >
                     <option value="individual">
-                      Individual Plan — Self-Managing Owner ($290 CAD / year)
+                      Individual Plan — Self-Managing Owner ($290 CAD / month)
                     </option>
                     <option value="property-manager">
                       Property Manager Plan — Licensed / Multi-Portfolio ($590 CAD / year)
                     </option>
                     <option value="custom">
-                      Custom Portfolio Membership — 6+ Units ($990 CAD / year)
+                      Custom Portfolio Membership — 6+ Units ($999 CAD / year)
                     </option>
                   </select>
                 </div>
