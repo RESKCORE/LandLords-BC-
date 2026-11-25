@@ -220,7 +220,7 @@ export const Modal: React.FC<ModalProps> = ({
     setFormSubmitted(true);
   };
 
-  const handleMembershipCheckout = (e: React.FormEvent) => {
+  const handleMembershipCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsRedirecting(true);
 
@@ -233,6 +233,29 @@ export const Modal: React.FC<ModalProps> = ({
       localStorage.setItem('pending_checkout_plan', selectedPlan);
     }
 
+    // Try dynamic checkout session with origin so it automatically redirects back to the current deployed URL
+    try {
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: selectedPlan,
+          email: trimmedEmail,
+          returnUrl: window.location.origin,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('API checkout fallback to payment link:', err);
+    }
+
+    // Fallback to static Stripe Payment Link
     const finalUrl = trimmedEmail
       ? `${baseLink}?prefilled_email=${encodeURIComponent(trimmedEmail)}`
       : baseLink;
