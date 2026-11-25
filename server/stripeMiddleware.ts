@@ -151,10 +151,10 @@ export function stripePlugin() {
                     unit_amount: selected.amount,
                     ...(isSubscription
                       ? {
-                          recurring: {
-                            interval: activeInterval,
-                          },
-                        }
+                        recurring: {
+                          interval: activeInterval,
+                        },
+                      }
                       : {}),
                   },
                   quantity: 1,
@@ -486,8 +486,8 @@ export function stripePlugin() {
                   const plan = isCustom
                     ? 'Custom Portfolio Membership ($999 CAD / year)'
                     : isPM
-                    ? 'Property Manager Membership ($590 CAD / year)'
-                    : 'Individual Membership ($290 CAD / month)';
+                      ? 'Property Manager Membership ($590 CAD / year)'
+                      : 'Individual Membership ($290 CAD / month)';
                   const memberId = `BC-MEM-${matched.id.slice(-4).toUpperCase()}`;
                   saveMember({
                     email: cleanEmail,
@@ -658,8 +658,8 @@ export function stripePlugin() {
               const planDesc = isCustom
                 ? 'Landlords BC — Custom Portfolio Membership (Annual Bespoke RTA Protection & 6+ Unit Defense)'
                 : isPM
-                ? 'Landlords BC — Property Manager Membership (Annual RTA Protection & Multi-Unit Defense)'
-                : 'Landlords BC — Individual Landlord Membership (Monthly RTA Protection & Statutory Defense)';
+                  ? 'Landlords BC — Property Manager Membership (Annual RTA Protection & Multi-Unit Defense)'
+                  : 'Landlords BC — Individual Landlord Membership (Monthly RTA Protection & Statutory Defense)';
 
               // Create invoice
               const newInvoice = await stripe.invoices.create({
