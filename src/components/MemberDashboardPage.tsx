@@ -796,32 +796,6 @@ Vancouver, British Columbia, Canada
 
           {/* Right: Actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {/* Glass UI Button: Billing & Tax Invoices */}
-            <button
-              type="button"
-              onClick={() => setActiveCardModal('billing')}
-              style={{
-                background: 'rgba(255, 255, 255, 0.65)',
-                backdropFilter: 'blur(14px)',
-                WebkitBackdropFilter: 'blur(14px)',
-                border: '1px solid rgba(255, 255, 255, 0.9)',
-                boxShadow: '0 3px 12px rgba(42, 26, 18, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
-                padding: '7px 14px',
-                borderRadius: '999px',
-                fontSize: '12px',
-                fontWeight: 600,
-                color: '#2a1a12',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                transition: 'all 0.2s ease',
-              }}
-              title="Manage Stripe Subscription & Download CRA Tax Receipts"
-            >
-              <span>🧾 Billing &amp; Tax Invoices</span>
-            </button>
-
             <a
               href={CONTACT_INFO.phoneHref}
               style={{
