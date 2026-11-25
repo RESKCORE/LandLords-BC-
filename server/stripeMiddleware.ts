@@ -107,6 +107,25 @@ export function stripePlugin() {
 
             const selected = planDetails[plan] || planDetails.individual;
 
+            // Find or create customer to bind the payment to their persistent Stripe profile
+            let customerId: string | undefined;
+            if (email && email.includes('@')) {
+              const cleanEmail = email.trim().toLowerCase();
+              const existingCust = await stripe.customers.list({
+                email: cleanEmail,
+                limit: 1,
+              });
+              if (existingCust.data.length > 0) {
+                customerId = existingCust.data[0].id;
+              } else {
+                const createdCust = await stripe.customers.create({
+                  email: cleanEmail,
+                  metadata: { source: 'landlords-bc-checkout' },
+                });
+                customerId = createdCust.id;
+              }
+            }
+
             const session = await stripe.checkout.sessions.create({
               line_items: [
                 {
@@ -122,7 +141,18 @@ export function stripePlugin() {
                 },
               ],
               mode: 'payment',
-              customer_email: email && email.includes('@') ? email : undefined,
+              customer: customerId,
+              customer_email: customerId ? undefined : (email && email.includes('@') ? email : undefined),
+              invoice_creation: {
+                enabled: true,
+                invoice_data: {
+                  description: `${selected.name} · 100% Tax Deductible (CRA Form T776 Line 8810)`,
+                  custom_fields: [
+                    { name: 'CRA Tax Deductibility', value: 'Form T776 Line 8810 / 8871' },
+                    { name: 'Jurisdiction', value: 'British Columbia, Canada' },
+                  ],
+                },
+              },
               success_url: `${origin}/?status=success&session_id={CHECKOUT_SESSION_ID}`,
               cancel_url: `${origin}/?status=cancelled`,
             });
@@ -306,6 +336,49 @@ export function stripePlugin() {
                 })
               );
               return;
+            }
+
+            // Check Stripe directly for paid charges/invoices
+            const secretKey = process.env.STRIPE_SECRET_KEY;
+            if (secretKey) {
+              try {
+                const stripe = new Stripe(secretKey);
+                const charges = await stripe.charges.list({ limit: 50 });
+                const matched = charges.data.find(
+                  (c) =>
+                    (c.billing_details?.email || c.receipt_email || '').toLowerCase() === cleanEmail &&
+                    c.status === 'succeeded' &&
+                    c.paid
+                );
+                if (matched) {
+                  const isPM = matched.amount >= 50000;
+                  const plan = isPM
+                    ? 'Property Manager Membership ($590 CAD / year)'
+                    : 'Individual Membership ($290 CAD / year)';
+                  const memberId = `BC-MEM-${matched.id.slice(-4).toUpperCase()}`;
+                  saveMember({
+                    email: cleanEmail,
+                    name: cleanEmail.split('@')[0],
+                    plan,
+                    memberId,
+                    status: 'active',
+                    joinedAt: new Date(matched.created * 1000).toISOString(),
+                  });
+                  res.statusCode = 200;
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(
+                    JSON.stringify({
+                      isMember: true,
+                      plan,
+                      memberId,
+                      email: cleanEmail,
+                      status: 'active',
+                      name: cleanEmail.split('@')[0],
+                    })
+                  );
+                  return;
+                }
+              } catch (_) {}
             }
 
             res.statusCode = 200;
@@ -495,6 +568,147 @@ export function stripePlugin() {
                 error: err.message || 'Billing portal session creation failed',
               })
             );
+          }
+        });
+      });
+
+      // 7. Get Member's Live Stripe Payments Endpoint
+      server.middlewares.use('/api/get-stripe-payments', async (req, res) => {
+        let body = '';
+        req.on('data', (chunk) => {
+          body += chunk;
+        });
+
+        req.on('end', async () => {
+          try {
+            const secretKey = process.env.STRIPE_SECRET_KEY;
+            if (!secretKey) {
+              res.statusCode = 400;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ error: 'STRIPE_SECRET_KEY is not configured in .env.local' }));
+              return;
+            }
+
+            const stripe = new Stripe(secretKey);
+
+            // Extract email from query string or body
+            let email = '';
+            if (req.url && req.url.includes('?')) {
+              const urlParams = new URLSearchParams(req.url.split('?')[1]);
+              email = urlParams.get('email') || '';
+            }
+            if (!email && body) {
+              try {
+                const parsed = JSON.parse(body);
+                email = parsed.email || '';
+              } catch (_) {}
+            }
+
+            const cleanEmail = (email || '').trim().toLowerCase();
+            if (!cleanEmail || !cleanEmail.includes('@')) {
+              res.statusCode = 400;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ error: 'Valid member email is required' }));
+              return;
+            }
+
+            // 1. Fetch customer records
+            const customers = await stripe.customers.list({ email: cleanEmail, limit: 10 });
+            const customerIds = customers.data.map((c) => c.id);
+
+            // 2. Fetch charges (limit 50)
+            const chargesList = await stripe.charges.list({ limit: 50 });
+            const userCharges = chargesList.data.filter((ch) => {
+              const bEmail = (ch.billing_details?.email || '').toLowerCase();
+              const rEmail = (ch.receipt_email || '').toLowerCase();
+              return bEmail === cleanEmail || rEmail === cleanEmail || (ch.customer && customerIds.includes(ch.customer as string));
+            });
+
+            // 3. Fetch invoices (limit 50)
+            const invoicesList = await stripe.invoices.list({ limit: 50 });
+            const userInvoices = invoicesList.data.filter((inv) => {
+              const invEmail = (inv.customer_email || '').toLowerCase();
+              return invEmail === cleanEmail || (inv.customer && customerIds.includes(inv.customer as string));
+            });
+
+            // 4. Fetch checkout sessions (limit 50)
+            const sessionsList = await stripe.checkout.sessions.list({ limit: 50 });
+            const userSessions = sessionsList.data.filter((s) => {
+              const sEmail = (s.customer_email || s.customer_details?.email || '').toLowerCase();
+              return sEmail === cleanEmail || (s.customer && customerIds.includes(s.customer as string));
+            });
+
+            // Build unified transaction records
+            const payments: any[] = [];
+            const seenTxIds = new Set<string>();
+
+            // Map invoices (preferred for billing with numbers & pdfs)
+            for (const inv of userInvoices) {
+              if (inv.status === 'paid' && (inv.total || 0) > 0) {
+                seenTxIds.add(inv.id);
+                payments.push({
+                  id: inv.id,
+                  type: 'invoice',
+                  amount: (inv.total || 0) / 100,
+                  currency: (inv.currency || 'cad').toUpperCase(),
+                  status: 'paid',
+                  date: new Date(inv.created * 1000).toISOString(),
+                  description: inv.description || inv.lines?.data[0]?.description || 'Landlords BC Annual Membership',
+                  invoiceNumber: inv.number || `LBC-INV-${inv.id.slice(-6).toUpperCase()}`,
+                  receiptUrl: inv.hosted_invoice_url,
+                  invoiceUrl: inv.hosted_invoice_url,
+                  invoicePdf: inv.invoice_pdf,
+                });
+              }
+            }
+
+            // Map charges that are not already represented by an invoice
+            for (const ch of userCharges) {
+              if (ch.status === 'succeeded' && ch.paid) {
+                const isInvoiceCharge = (ch as any).invoice && seenTxIds.has((ch as any).invoice as string);
+                if (!isInvoiceCharge) {
+                  seenTxIds.add(ch.id);
+                  payments.push({
+                    id: ch.id,
+                    type: 'charge',
+                    amount: (ch.amount || 0) / 100,
+                    currency: (ch.currency || 'cad').toUpperCase(),
+                    status: 'paid',
+                    date: new Date(ch.created * 1000).toISOString(),
+                    description: ch.description || 'Landlords BC Membership Payment',
+                    invoiceNumber: `LBC-CHG-${ch.id.slice(-6).toUpperCase()}`,
+                    receiptUrl: ch.receipt_url,
+                    invoiceUrl: ch.receipt_url,
+                    invoicePdf: null,
+                  });
+                }
+              }
+            }
+
+            // Sort by date descending (newest first)
+            payments.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+            // Calculate total paid across test transactions
+            const totalPaid = payments.reduce((acc, p) => acc + p.amount, 0);
+
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(
+              JSON.stringify({
+                email: cleanEmail,
+                customerId: customerIds[0] || null,
+                isTestMode: secretKey.startsWith('sk_test_'),
+                hasPayments: payments.length > 0,
+                totalPaid,
+                payments,
+                sessionsCount: userSessions.length,
+              })
+            );
+          } catch (err: any) {
+            console.error('[Stripe Get Payments Error]:', err.message);
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: err.message || 'Failed to retrieve payments' }));
           }
         });
       });

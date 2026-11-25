@@ -1,5 +1,21 @@
 [
   {
+    "email": "manoj.ardenttech@gmail.com",
+    "name": "manoj.ardenttech",
+    "plan": "Property Manager Membership ($590 CAD / year)",
+    "memberId": "BC-MEM-IV5E",
+    "status": "active",
+    "joinedAt": "2026-11-25T15:08:37.000Z"
+  },
+  {
+    "email": "reddysantoshh@gmail.com",
+    "name": "reddysantoshh",
+    "plan": "Individual Membership ($290 CAD / year)",
+    "memberId": "BC-MEM-ZQG9",
+    "status": "active",
+    "joinedAt": "2026-11-25T11:07:44.000Z"
+  },
+  {
     "email": "reddysantosh1310@gmail.com",
     "name": "Reddy Santosh Kumar",
     "plan": "Property Manager Membership ($590 CAD / year)",

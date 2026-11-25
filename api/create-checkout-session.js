@@ -55,6 +55,25 @@ export default async function handler(req, res) {
 
     const selected = planDetails[plan] || planDetails.individual;
 
+    // Find or create customer to bind the payment to their persistent Stripe profile
+    let customerId;
+    if (email && email.includes('@')) {
+      const cleanEmail = email.trim().toLowerCase();
+      const existingCust = await stripe.customers.list({
+        email: cleanEmail,
+        limit: 1,
+      });
+      if (existingCust.data.length > 0) {
+        customerId = existingCust.data[0].id;
+      } else {
+        const createdCust = await stripe.customers.create({
+          email: cleanEmail,
+          metadata: { source: 'landlords-bc-checkout' },
+        });
+        customerId = createdCust.id;
+      }
+    }
+
     const session = await stripe.checkout.sessions.create({
       line_items: [
         {
@@ -70,7 +89,18 @@ export default async function handler(req, res) {
         },
       ],
       mode: 'payment',
-      customer_email: email && email.includes('@') ? email : undefined,
+      customer: customerId,
+      customer_email: customerId ? undefined : (email && email.includes('@') ? email : undefined),
+      invoice_creation: {
+        enabled: true,
+        invoice_data: {
+          description: `${selected.name} · 100% Tax Deductible (CRA Form T776 Line 8810)`,
+          custom_fields: [
+            { name: 'CRA Tax Deductibility', value: 'Form T776 Line 8810 / 8871' },
+            { name: 'Jurisdiction', value: 'British Columbia, Canada' },
+          ],
+        },
+      },
       success_url: `${origin}/?status=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/?status=cancelled`,
     });

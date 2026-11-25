@@ -25,6 +25,20 @@ export interface MemberNote {
   complianceTag?: string;
 }
 
+export interface StripePaymentRecord {
+  id: string;
+  type: 'invoice' | 'charge' | string;
+  amount: number;
+  currency: string;
+  status: string;
+  date: string;
+  description: string;
+  invoiceNumber: string;
+  receiptUrl?: string;
+  invoiceUrl?: string;
+  invoicePdf?: string | null;
+}
+
 export const MemberDashboardPage: React.FC<MemberDashboardPageProps> = ({
   onBackToHome,
   onSignOut,
@@ -36,6 +50,12 @@ export const MemberDashboardPage: React.FC<MemberDashboardPageProps> = ({
   const [memberId, setMemberId] = useState('BC-MEM-8421');
   const [membershipPlan, setMembershipPlan] = useState('Individual Membership ($290 CAD / year)');
   const [downloadNotice, setDownloadNotice] = useState(false);
+
+  // Stripe Sandbox / Test Mode Payments state
+  const [stripePayments, setStripePayments] = useState<StripePaymentRecord[]>([]);
+  const [stripeLoading, setStripeLoading] = useState(false);
+  const [stripeError, setStripeError] = useState<string | null>(null);
+  const [searchEmail, setSearchEmail] = useState('');
 
   // Helper to format plan tier names cleanly
   const formatPlanName = (plan: string) => {
@@ -104,13 +124,49 @@ export const MemberDashboardPage: React.FC<MemberDashboardPageProps> = ({
     : 'Individual Landlord Membership';
   const invoiceNumber = `LBC-INV-${memberId.replace('BC-MEM-', '')}-2026`;
 
+  // Fetch live Stripe test mode payments for a member email
+  const fetchStripePayments = async (emailToQuery: string) => {
+    if (!emailToQuery || !emailToQuery.includes('@')) return;
+    setStripeLoading(true);
+    setStripeError(null);
+    try {
+      const res = await fetch(`/api/get-stripe-payments?email=${encodeURIComponent(emailToQuery.trim())}`);
+      if (!res.ok) {
+        throw new Error(`Stripe API returned status ${res.status}`);
+      }
+      const data = await res.json();
+      if (data && Array.isArray(data.payments)) {
+        setStripePayments(data.payments);
+        if (data.payments.length > 0) {
+          const latest = data.payments[0];
+          if (latest.amount >= 500) {
+            setMembershipPlan('Property Manager Membership ($590 CAD / year)');
+          } else if (latest.amount >= 200) {
+            setMembershipPlan('Individual Membership ($290 CAD / year)');
+          }
+        }
+      } else {
+        setStripePayments([]);
+      }
+    } catch (err: any) {
+      console.warn('[Stripe Payments Fetch Notice]:', err?.message);
+      setStripeError(err?.message || 'Could not connect to Stripe Sandbox');
+    } finally {
+      setStripeLoading(false);
+    }
+  };
+
   useEffect(() => {
     // Load stored user info
+    let resolvedEmail = 'member@landlordsbc.org';
     const savedGoogle = localStorage.getItem('landlords_google_user');
     if (savedGoogle) {
       try {
         const parsed = JSON.parse(savedGoogle);
-        if (parsed.email) setUserEmail(parsed.email);
+        if (parsed.email) {
+          resolvedEmail = parsed.email;
+          setUserEmail(parsed.email);
+        }
         if (parsed.name && parsed.name.trim()) {
           setUserName(parsed.name.trim());
         }
@@ -118,6 +174,7 @@ export const MemberDashboardPage: React.FC<MemberDashboardPageProps> = ({
     } else {
       const pending = localStorage.getItem('pending_checkout_email');
       if (pending) {
+        resolvedEmail = pending;
         setUserEmail(pending);
         const prefix = pending.split('@')[0];
         if (prefix && prefix !== 'member' && prefix !== 'test') {
@@ -126,6 +183,8 @@ export const MemberDashboardPage: React.FC<MemberDashboardPageProps> = ({
         }
       }
     }
+    setSearchEmail(resolvedEmail);
+    fetchStripePayments(resolvedEmail);
 
     const savedPlan = localStorage.getItem('pending_checkout_plan');
     if (savedPlan) {
@@ -634,6 +693,21 @@ MANDATORY RTB DISPUTE ADMISSIBILITY RULES:
     });
     const taxYear = new Date().getFullYear();
 
+    const activeInvoiceRef =
+      stripePayments.length > 0 && stripePayments[0].invoiceNumber
+        ? stripePayments[0].invoiceNumber
+        : invoiceNumber;
+    const paidAmount =
+      stripePayments.length > 0 && stripePayments[0].amount
+        ? stripePayments[0].amount
+        : subtotal;
+    const stripeTxId =
+      stripePayments.length > 0 ? stripePayments[0].id : 'N/A (Pre-Authorized Annual)';
+    const stripeReceiptNotice =
+      stripePayments.length > 0 && stripePayments[0].receiptUrl
+        ? `Stripe Hosted Receipt: ${stripePayments[0].receiptUrl}`
+        : 'Stripe Payment Processor: Stripe Canada (CAD Test Mode)';
+
     const receiptContent = `========================================================================
 LANDLORDS BC ASSOCIATION — OFFICIAL CRA TAX RECEIPT & MEMBERSHIP INVOICE
 Canadian Real Estate Rental Business Expense Documentation
@@ -647,26 +721,28 @@ Membership ID: ${memberId}
 Jurisdiction: British Columbia, Canada
 
 TRANSACTION SUMMARY:
-Invoice / Receipt Number: LBC-INV-${memberId.replace('BC-MEM-', '')}-${taxYear}
-Date Issued: ${dateStr}
-Payment Processor: Stripe Payments Canada (CAD)
+Invoice / Receipt Number: ${activeInvoiceRef}
+Date Issued: ${stripePayments.length > 0 ? new Date(stripePayments[0].date).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }) : dateStr}
+Payment Processor: Stripe Payments Canada (CAD Test Mode)
+Stripe Transaction ID: ${stripeTxId}
 Transaction Status: Paid & Active (Annual Subscription)
+${stripeReceiptNotice}
 
 ITEMIZED CHARGES:
 ------------------------------------------------------------------------
 Description                                                    Amount (CAD)
 ------------------------------------------------------------------------
-1. ${planTitle} (${taxYear})                             $${subtotal.toFixed(2)}
+1. ${stripePayments.length > 0 && stripePayments[0].description ? stripePayments[0].description : `${planTitle} (${taxYear})`}
    - BC Residential Tenancy Act (RTA) Compliance Defense
    - Statutory Form & Evidence Access (RTB-30, RTB-27, RTB-7)
    - Priority Tenancy Advisor Line Access
    - Zero-Disclosure Private Property Documentation Vault
 
-Subtotal:                                                      $${subtotal.toFixed(2)} CAD
+Subtotal:                                                      $${paidAmount.toFixed(2)} CAD
 GST (5.0% - Exempt/Included Non-Profit Association):           $0.00 CAD
 PST (Provincial Sales Tax Exempt):                             $0.00 CAD
 ------------------------------------------------------------------------
-TOTAL PAID:                                                    $${subtotal.toFixed(2)} CAD
+TOTAL PAID:                                                    $${paidAmount.toFixed(2)} CAD
 ------------------------------------------------------------------------
 
 CANADA REVENUE AGENCY (CRA) TAX DEDUCTIBILITY NOTICE:
@@ -689,7 +765,7 @@ Vancouver, British Columbia, Canada
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `CRA-Tax-Receipt-LandlordsBC-${memberId}-${taxYear}.txt`;
+    a.download = `CRA-Tax-Receipt-LandlordsBC-${activeInvoiceRef}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1372,9 +1448,9 @@ Vancouver, British Columbia, Canada
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <span
                   style={{
-                    background: 'rgba(46, 107, 59, 0.12)',
-                    border: '1px solid rgba(46, 107, 59, 0.28)',
-                    color: '#1e542c',
+                    background: stripePayments.length > 0 ? 'rgba(34, 197, 94, 0.12)' : 'rgba(46, 107, 59, 0.12)',
+                    border: stripePayments.length > 0 ? '1px solid rgba(34, 197, 94, 0.28)' : '1px solid rgba(46, 107, 59, 0.28)',
+                    color: stripePayments.length > 0 ? '#15803d' : '#1e542c',
                     padding: '3px 8px',
                     borderRadius: '999px',
                     fontWeight: 700,
@@ -1384,7 +1460,7 @@ Vancouver, British Columbia, Canada
                     gap: '4px',
                   }}
                 >
-                  <span style={{ fontSize: '7px' }}>●</span> CRA Form T776 Line 8810
+                  <span style={{ fontSize: '7px' }}>●</span> {stripePayments.length > 0 ? 'Stripe Test Mode Verified' : 'CRA Form T776 Line 8810'}
                 </span>
                 <span
                   style={{
@@ -1418,24 +1494,34 @@ Vancouver, British Columbia, Canada
                 {/* Invoice Ref & Status */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(42, 26, 18, 0.06)', paddingBottom: '5px' }}>
                   <span style={{ fontSize: '11px', fontWeight: 700, color: '#3b2116' }}>
-                    {invoiceNumber}
+                    {stripePayments.length > 0 ? (stripePayments[0].invoiceNumber || stripePayments[0].id) : invoiceNumber}
                   </span>
-                  <span style={{ fontSize: '10px', color: '#2e6b3b', fontWeight: 700 }}>
-                    ✓ Paid &amp; Active
+                  <span style={{ fontSize: '10px', color: '#15803d', fontWeight: 700, background: 'rgba(34, 197, 94, 0.1)', padding: '1px 6px', borderRadius: '4px' }}>
+                    {stripePayments.length > 0 ? '✓ Paid (Stripe Sandbox)' : '✓ Paid & Active'}
                   </span>
                 </div>
 
                 {/* Member Identity Details */}
                 <div style={{ fontSize: '10.5px', color: '#5b4a3f', lineHeight: 1.35 }}>
                   <div><strong>Account:</strong> {userEmail}</div>
-                  <div><strong>Member ID:</strong> {memberId} · {planTitle}</div>
+                  {stripePayments.length > 0 ? (
+                    <div>
+                      <strong>Stripe Tx:</strong> {stripePayments[0].id.slice(0, 16)}... · {new Date(stripePayments[0].date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </div>
+                  ) : (
+                    <div><strong>Member ID:</strong> {memberId} · {planTitle}</div>
+                  )}
                 </div>
 
                 {/* Line Items Breakdown */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '10.5px', color: '#5b4a3f' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Annual Membership Dues</span>
-                    <strong style={{ color: '#2a1a12' }}>${subtotal.toFixed(2)} CAD</strong>
+                    <span style={{ maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {stripePayments.length > 0 ? (stripePayments[0].description || planTitle) : 'Annual Membership Dues'}
+                    </span>
+                    <strong style={{ color: '#2a1a12' }}>
+                      ${(stripePayments.length > 0 ? stripePayments[0].amount : subtotal).toFixed(2)} CAD
+                    </strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: '#8c7e75', fontSize: '10px' }}>
                     <span>GST (5% Exempt Non-Profit)</span>
@@ -1457,42 +1543,74 @@ Vancouver, British Columbia, Canada
                     alignItems: 'baseline',
                   }}
                 >
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#2a1a12' }}>Total Paid (Annual):</span>
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#2a1a12' }}>
+                    {stripePayments.length > 0 ? 'Total Paid (Stripe CAD):' : 'Total Paid (Annual):'}
+                  </span>
                   <strong style={{ fontSize: '14px', color: '#2a1a12', fontWeight: 800 }}>
-                    ${subtotal.toFixed(2)} CAD
+                    ${(stripePayments.length > 0 ? stripePayments[0].amount : subtotal).toFixed(2)} CAD
                   </strong>
                 </div>
 
                 {/* In-Card Action Buttons */}
                 <div style={{ display: 'flex', gap: '6px', marginTop: '2px' }}>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenStripePortal();
-                    }}
-                    disabled={portalLoading}
-                    style={{
-                      flex: 1,
-                      background: 'rgba(59, 33, 22, 0.88)',
-                      backdropFilter: 'blur(10px)',
-                      color: '#f6f0e7',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      borderRadius: '999px',
-                      padding: '5px 8px',
-                      fontSize: '10.5px',
-                      fontWeight: 600,
-                      cursor: portalLoading ? 'wait' : 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '3px',
-                      transition: 'all 0.2s ease',
-                    }}
-                  >
-                    <span>{portalLoading ? 'Connecting...' : 'Stripe Portal'}</span>
-                    <span>↗</span>
-                  </button>
+                  {stripePayments.length > 0 && stripePayments[0].receiptUrl ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(stripePayments[0].receiptUrl, '_blank', 'noopener,noreferrer');
+                      }}
+                      style={{
+                        flex: 1,
+                        background: 'rgba(59, 33, 22, 0.88)',
+                        backdropFilter: 'blur(10px)',
+                        color: '#f6f0e7',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '999px',
+                        padding: '5px 8px',
+                        fontSize: '10.5px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '3px',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <span>Stripe Receipt</span>
+                      <span>↗</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenStripePortal();
+                      }}
+                      disabled={portalLoading}
+                      style={{
+                        flex: 1,
+                        background: 'rgba(59, 33, 22, 0.88)',
+                        backdropFilter: 'blur(10px)',
+                        color: '#f6f0e7',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '999px',
+                        padding: '5px 8px',
+                        fontSize: '10.5px',
+                        fontWeight: 600,
+                        cursor: portalLoading ? 'wait' : 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '3px',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <span>{portalLoading ? 'Connecting...' : 'Stripe Portal'}</span>
+                      <span>↗</span>
+                    </button>
+                  )}
 
                   <button
                     type="button"
@@ -1521,6 +1639,20 @@ Vancouver, British Columbia, Canada
                     <span>Tax Receipt</span>
                     <span>↓</span>
                   </button>
+                </div>
+
+                {/* Sub-row with live status & mini-screen cue */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px', fontSize: '9.5px', color: '#8c7e75' }}>
+                  <span>
+                    {stripePayments.length > 0
+                      ? `● ${stripePayments.length} test payment${stripePayments.length > 1 ? 's' : ''} recorded`
+                      : '● Test Mode Active'}
+                  </span>
+                  <span
+                    style={{ color: '#3b2116', fontWeight: 600, textDecoration: 'underline' }}
+                  >
+                    View All in Mini Screen ↗
+                  </span>
                 </div>
               </div>
 
@@ -2640,6 +2772,254 @@ Vancouver, British Columbia, Canada
                   Under Canada Revenue Agency (CRA) guidelines for real estate rentals (Form T776 / Guide T4036), landlord association membership dues and legal defense fees are <strong>100% tax-deductible</strong> against your gross rental revenue.
                 </p>
 
+                {/* 1. Verified Stripe Test Mode Payments (Live Sandbox Data) */}
+                <div
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid rgba(42, 26, 18, 0.12)',
+                    borderRadius: '14px',
+                    padding: '16px',
+                    marginBottom: '16px',
+                    boxShadow: '0 4px 16px rgba(42, 26, 18, 0.04)',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      borderBottom: '1px solid rgba(42, 26, 18, 0.08)',
+                      paddingBottom: '10px',
+                      marginBottom: '12px',
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />
+                        <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#16a34a', fontWeight: 800, letterSpacing: '0.05em' }}>
+                          Stripe Sandbox · Test Mode Payments
+                        </span>
+                      </div>
+                      <h4 style={{ margin: '2px 0 0', fontSize: '15px', color: '#2a1a12', fontWeight: 700 }}>
+                        Real-Time Stripe Payment History
+                      </h4>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => fetchStripePayments(searchEmail || userEmail)}
+                      disabled={stripeLoading}
+                      style={{
+                        background: 'rgba(42, 26, 18, 0.06)',
+                        border: '1px solid rgba(42, 26, 18, 0.12)',
+                        borderRadius: '999px',
+                        padding: '4px 10px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        color: '#3b2116',
+                        cursor: stripeLoading ? 'wait' : 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <span>{stripeLoading ? 'Fetching...' : '↻ Refresh Stripe Data'}</span>
+                    </button>
+                  </div>
+
+                  {/* Email Switcher / Query Tool */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '8px',
+                      alignItems: 'center',
+                      background: 'rgba(246, 240, 231, 0.5)',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      marginBottom: '12px',
+                      fontSize: '11px',
+                    }}
+                  >
+                    <span style={{ color: '#5b4a3f', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      Query Stripe Account:
+                    </span>
+                    <input
+                      type="email"
+                      value={searchEmail}
+                      onChange={(e) => setSearchEmail(e.target.value)}
+                      placeholder="e.g. reddysantoshh@gmail.com"
+                      style={{
+                        flex: 1,
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        border: '1px solid rgba(42, 26, 18, 0.2)',
+                        fontSize: '11.5px',
+                        color: '#2a1a12',
+                        background: '#ffffff',
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          fetchStripePayments(searchEmail);
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fetchStripePayments(searchEmail)}
+                      disabled={stripeLoading}
+                      style={{
+                        background: '#3b2116',
+                        color: '#f6f0e7',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: '4px 10px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Search
+                    </button>
+                  </div>
+
+                  {/* Loading State */}
+                  {stripeLoading && (
+                    <div style={{ textAlign: 'center', padding: '16px', color: '#8c7e75', fontSize: '12px' }}>
+                      Connecting to Stripe Sandbox API &amp; retrieving payments...
+                    </div>
+                  )}
+
+                  {/* Error State */}
+                  {stripeError && !stripeLoading && (
+                    <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '8px', padding: '8px 12px', marginBottom: '10px', fontSize: '11px', color: '#991b1b' }}>
+                      <strong>Notice:</strong> {stripeError}
+                    </div>
+                  )}
+
+                  {/* Payments List */}
+                  {!stripeLoading && stripePayments.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {stripePayments.map((p) => (
+                        <div
+                          key={p.id}
+                          style={{
+                            background: '#faf7f2',
+                            border: '1px solid rgba(42, 26, 18, 0.1)',
+                            borderRadius: '10px',
+                            padding: '10px 12px',
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <strong style={{ fontSize: '12.5px', color: '#2a1a12' }}>
+                                {p.invoiceNumber || p.id}
+                              </strong>
+                              <span
+                                style={{
+                                  fontSize: '9.5px',
+                                  textTransform: 'uppercase',
+                                  background: 'rgba(59, 33, 22, 0.08)',
+                                  color: '#3b2116',
+                                  padding: '1px 6px',
+                                  borderRadius: '4px',
+                                  fontWeight: 700,
+                                }}
+                              >
+                                {p.type === 'invoice' ? 'Stripe Invoice' : 'Stripe Charge'}
+                              </span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span
+                                style={{
+                                  fontSize: '10px',
+                                  background: 'rgba(34, 197, 94, 0.15)',
+                                  color: '#15803d',
+                                  padding: '2px 7px',
+                                  borderRadius: '999px',
+                                  fontWeight: 700,
+                                }}
+                              >
+                                ✓ Paid
+                              </span>
+                              <strong style={{ fontSize: '13.5px', color: '#2a1a12' }}>
+                                ${p.amount.toFixed(2)} {p.currency}
+                              </strong>
+                            </div>
+                          </div>
+
+                          <div style={{ fontSize: '11px', color: '#5b4a3f', margin: '4px 0 2px' }}>
+                            {p.description}
+                          </div>
+
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', color: '#8c7e75', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
+                            <div>
+                              <span>Date: <strong>{new Date(p.date).toLocaleString('en-CA', { dateStyle: 'medium', timeStyle: 'short' })}</strong></span>
+                              <span style={{ margin: '0 6px' }}>·</span>
+                              <span>Stripe ID: <code style={{ fontSize: '9px', background: 'rgba(0,0,0,0.05)', padding: '1px 4px', borderRadius: '3px' }}>{p.id}</code></span>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              {p.receiptUrl && (
+                                <a
+                                  href={p.receiptUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    background: '#3b2116',
+                                    color: '#f6f0e7',
+                                    padding: '3px 9px',
+                                    borderRadius: '999px',
+                                    fontSize: '10px',
+                                    fontWeight: 600,
+                                    textDecoration: 'none',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '3px',
+                                  }}
+                                >
+                                  <span>View Stripe Receipt</span>
+                                  <span>↗</span>
+                                </a>
+                              )}
+                              {p.invoicePdf && (
+                                <a
+                                  href={p.invoicePdf}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    background: 'rgba(255, 255, 255, 0.9)',
+                                    border: '1px solid rgba(42, 26, 18, 0.2)',
+                                    color: '#2a1a12',
+                                    padding: '3px 9px',
+                                    borderRadius: '999px',
+                                    fontSize: '10px',
+                                    fontWeight: 600,
+                                    textDecoration: 'none',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '3px',
+                                  }}
+                                >
+                                  <span>Stripe PDF</span>
+                                  <span>↓</span>
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : !stripeLoading ? (
+                    <div style={{ textAlign: 'center', padding: '16px', background: 'rgba(42, 26, 18, 0.02)', borderRadius: '8px', border: '1px dashed rgba(42, 26, 18, 0.15)' }}>
+                      <div style={{ fontSize: '12px', color: '#5b4a3f', fontWeight: 600 }}>
+                        No Stripe test mode payments found under &ldquo;{searchEmail || userEmail}&rdquo;
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#8c7e75', marginTop: '4px' }}>
+                        If you used another email during Stripe Checkout, enter it above and click Search.
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+
                 {/* Complete Itemized Statement & Invoice */}
                 <div style={{ background: '#ffffff', border: '1px solid rgba(42, 26, 18, 0.12)', borderRadius: '14px', padding: '18px', marginBottom: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgba(42, 26, 18, 0.08)', paddingBottom: '12px', marginBottom: '12px' }}>
@@ -2648,7 +3028,7 @@ Vancouver, British Columbia, Canada
                         Official Invoice Ref
                       </div>
                       <div style={{ fontSize: '16px', fontWeight: 800, color: '#3b2116', marginTop: '2px' }}>
-                        {invoiceNumber}
+                        {stripePayments.length > 0 ? (stripePayments[0].invoiceNumber || stripePayments[0].id) : invoiceNumber}
                       </div>
                       <div style={{ fontSize: '11.5px', color: '#5b4a3f', marginTop: '2px' }}>
                         Member: <strong>{userEmail}</strong> ({memberId})
@@ -2659,7 +3039,7 @@ Vancouver, British Columbia, Canada
                         ✓ Paid &amp; Active
                       </span>
                       <div style={{ fontSize: '11px', color: '#8c7e75', marginTop: '4px' }}>
-                        Processed via Stripe Canada (CAD)
+                        Processed via Stripe Canada (CAD Sandbox)
                       </div>
                     </div>
                   </div>
@@ -2671,8 +3051,10 @@ Vancouver, British Columbia, Canada
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid rgba(42, 26, 18, 0.04)' }}>
-                        <span>1. {planTitle} (2026 Annual Access)</span>
-                        <strong style={{ color: '#2a1a12' }}>${subtotal.toFixed(2)} CAD</strong>
+                        <span>1. {stripePayments.length > 0 && stripePayments[0].description ? stripePayments[0].description : `${planTitle} (2026 Annual Access)`}</span>
+                        <strong style={{ color: '#2a1a12' }}>
+                          ${(stripePayments.length > 0 ? stripePayments[0].amount : subtotal).toFixed(2)} CAD
+                        </strong>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', color: '#8c7e75', fontSize: '11px', paddingLeft: '12px' }}>
                         <span>• BC RTA Statutory Defense &amp; Form Dossiers</span>
@@ -2699,7 +3081,7 @@ Vancouver, British Columbia, Canada
                     <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '2px dashed rgba(42, 26, 18, 0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '13px', fontWeight: 700, color: '#2a1a12' }}>Total Paid:</span>
                       <strong style={{ fontSize: '18px', color: '#2a1a12', fontWeight: 800 }}>
-                        ${subtotal.toFixed(2)} CAD
+                        ${(stripePayments.length > 0 ? stripePayments[0].amount : subtotal).toFixed(2)} CAD
                       </strong>
                     </div>
                   </div>
@@ -2717,6 +3099,9 @@ Vancouver, British Columbia, Canada
                 )}
 
                 {/* Primary Actions */}
+                <div style={{ marginBottom: '8px', fontSize: '11px', color: '#5b4a3f', lineHeight: 1.45 }}>
+                  💡 <strong>Stripe Test Mode Tip:</strong> Official Stripe-hosted receipts and invoices for your sandbox transactions are directly accessible via the &ldquo;View Stripe Receipt ↗&rdquo; and &ldquo;Stripe PDF ↓&rdquo; links above. You can also access the Stripe Customer Portal below to review saved billing preferences.
+                </div>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' }}>
                   <button
                     type="button"
