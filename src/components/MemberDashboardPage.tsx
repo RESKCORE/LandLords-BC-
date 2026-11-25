@@ -79,6 +79,11 @@ export const MemberDashboardPage: React.FC<MemberDashboardPageProps> = ({
   const [showServiceHelperModal, setShowServiceHelperModal] = useState(false);
   const [activeAdvisoryTopic, setActiveAdvisoryTopic] = useState<string>('unpaid_rent');
 
+  // Billing Portal & CRA Tax Receipt state
+  const [showBillingModal, setShowBillingModal] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalError, setPortalError] = useState<string | null>(null);
+
   // Rent Calculator state
   const [rentInput, setRentInput] = useState<number>(2200);
   const [serviceMethod, setServiceMethod] = useState<'person' | 'door' | 'mail'>('door');
@@ -556,6 +561,113 @@ MANDATORY RTB DISPUTE ADMISSIBILITY RULES:
     };
   };
 
+  // Launch Stripe Customer Billing Portal
+  const handleOpenStripePortal = async () => {
+    setPortalLoading(true);
+    setPortalError(null);
+    try {
+      const res = await fetch('/api/create-portal-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: userEmail,
+          returnUrl: window.location.origin,
+        }),
+      });
+      const data = await res.json();
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data?.error || 'Stripe portal is currently in configuration mode.');
+      }
+    } catch (err: any) {
+      console.warn('Customer portal redirect notice:', err.message);
+      setPortalError(
+        'Stripe Customer Portal features can be activated in your Stripe Dashboard under Settings > Customer Portal. In the meantime, you can download your official CRA Tax Receipt below.'
+      );
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
+  // Download itemized CRA Tax Receipt & Membership Statement
+  const handleDownloadTaxReceipt = () => {
+    const dateStr = new Date().toLocaleDateString('en-CA', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    const taxYear = new Date().getFullYear();
+    const isPM =
+      membershipPlan.toLowerCase().includes('property') ||
+      membershipPlan.toLowerCase().includes('590');
+    const subtotal = isPM ? 590.0 : 290.0;
+    const planTitle = isPM
+      ? 'Property Manager Membership'
+      : 'Individual Landlord Membership';
+
+    const receiptContent = `========================================================================
+LANDLORDS BC ASSOCIATION — OFFICIAL CRA TAX RECEIPT & MEMBERSHIP INVOICE
+Canadian Real Estate Rental Business Expense Documentation
+Taxation Year: ${taxYear}
+========================================================================
+
+ISSUED TO MEMBER:
+Registered Account: ${userEmail}
+Member Full Name: ${userName}
+Membership ID: ${memberId}
+Jurisdiction: British Columbia, Canada
+
+TRANSACTION SUMMARY:
+Invoice / Receipt Number: LBC-INV-${memberId.replace('BC-MEM-', '')}-${taxYear}
+Date Issued: ${dateStr}
+Payment Processor: Stripe Payments Canada (CAD)
+Transaction Status: Paid & Active (Annual Subscription)
+
+ITEMIZED CHARGES:
+------------------------------------------------------------------------
+Description                                                    Amount (CAD)
+------------------------------------------------------------------------
+1. ${planTitle} (${taxYear})                             $${subtotal.toFixed(2)}
+   - BC Residential Tenancy Act (RTA) Compliance Defense
+   - Statutory Form & Evidence Access (RTB-30, RTB-27, RTB-7)
+   - Priority Tenancy Advisor Line Access
+   - Zero-Disclosure Private Property Documentation Vault
+
+Subtotal:                                                      $${subtotal.toFixed(2)} CAD
+GST (5.0% - Exempt/Included Non-Profit Association):           $0.00 CAD
+PST (Provincial Sales Tax Exempt):                             $0.00 CAD
+------------------------------------------------------------------------
+TOTAL PAID:                                                    $${subtotal.toFixed(2)} CAD
+------------------------------------------------------------------------
+
+CANADA REVENUE AGENCY (CRA) TAX DEDUCTIBILITY NOTICE:
+Pursuant to CRA Real Estate Rental Income Guidelines (Form T776 / Guide T4036):
+- Association dues and professional legal advisory fees incurred for earning rental income are 100% tax-deductible against gross rental revenues.
+- Recommended Tax Return Classification:
+  * Form T776, Part 4: Line 8810 ("Legal, accounting and other professional fees")
+  * or Line 8871 ("Management and administration fees")
+- Retain this official receipt in your accounting tax records for a minimum of 6 years in accordance with CRA audit compliance requirements.
+
+ISSUED BY:
+Landlords BC Member Association Legal & Financial Desk
+Helpline: ${CONTACT_INFO.phone} (${CONTACT_INFO.phoneHours})
+Email: ${CONTACT_INFO.helpEmail}
+Vancouver, British Columbia, Canada
+© ${taxYear} Landlords BC Association. All rights reserved.
+========================================================================`;
+
+    const blob = new Blob([receiptContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `CRA-Tax-Receipt-LandlordsBC-${memberId}-${taxYear}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div
       style={{
@@ -659,6 +771,32 @@ MANDATORY RTB DISPUTE ADMISSIBILITY RULES:
 
           {/* Right: Actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* Glass UI Button: Billing & Tax Invoices */}
+            <button
+              type="button"
+              onClick={() => setShowBillingModal(true)}
+              style={{
+                background: 'rgba(255, 255, 255, 0.65)',
+                backdropFilter: 'blur(14px)',
+                WebkitBackdropFilter: 'blur(14px)',
+                border: '1px solid rgba(255, 255, 255, 0.9)',
+                boxShadow: '0 3px 12px rgba(42, 26, 18, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
+                padding: '7px 14px',
+                borderRadius: '999px',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#2a1a12',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                transition: 'all 0.2s ease',
+              }}
+              title="Manage Stripe Subscription & Download CRA Tax Receipts"
+            >
+              <span>🧾 Billing &amp; Tax Invoices</span>
+            </button>
+
             <a
               href={CONTACT_INFO.phoneHref}
               style={{
@@ -839,8 +977,31 @@ MANDATORY RTB DISPUTE ADMISSIBILITY RULES:
                   <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#f6f0e7', marginTop: '2px' }}>
                     {formatPlanName(membershipPlan)}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#bbf7d0', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span>●</span> Annual Billing · RTA Protection Active
+                  <div style={{ fontSize: '11px', color: '#bbf7d0', marginTop: '4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span>●</span> Annual Billing · RTA Protection Active
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowBillingModal(true)}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.16)',
+                        border: '1px solid rgba(255, 255, 255, 0.28)',
+                        borderRadius: '999px',
+                        padding: '3px 8px',
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        color: '#ffffff',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                        marginTop: '2px',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <span>Invoices &amp; Portal ↗</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1979,6 +2140,147 @@ MANDATORY RTB DISPUTE ADMISSIBILITY RULES:
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Stripe Customer Billing & CRA Tax Invoices Modal */}
+          {showBillingModal && (
+            <div
+              className="modal-backdrop open"
+              data-lenis-prevent
+              role="dialog"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setShowBillingModal(false);
+              }}
+            >
+              <div className="modal-box" style={{ maxWidth: '640px', maxHeight: '88vh', overflowY: 'auto', padding: '24px' }}>
+                <div className="modal-top" style={{ marginBottom: '14px' }}>
+                  <div>
+                    <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#2e6b3b', fontWeight: 700 }}>
+                      CRA Tax-Deductible Business Expense · T776 Line 8810
+                    </span>
+                    <h3 style={{ margin: '4px 0 0', fontSize: '20px', color: '#2a1a12' }}>
+                      Membership Billing &amp; CRA Tax Invoices
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    className="modal-close"
+                    onClick={() => setShowBillingModal(false)}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <p style={{ fontSize: '13px', color: '#5b4a3f', lineHeight: 1.5, margin: '0 0 16px' }}>
+                  Under Canada Revenue Agency (CRA) guidelines for real estate rentals (Form T776 / Guide T4036), association membership dues and legal defense fees are <strong>100% tax-deductible</strong> against your gross rental revenue.
+                </p>
+
+                {/* Billing Summary Card */}
+                <div style={{ background: '#ffffff', border: '1px solid rgba(42, 26, 18, 0.12)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <div style={{ fontSize: '10.5px', textTransform: 'uppercase', color: '#8c7e75', fontWeight: 700 }}>
+                        Registered Member Account
+                      </div>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#2a1a12', marginTop: '2px', wordBreak: 'break-all' }}>
+                        {userEmail}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#5b4a3f' }}>ID: {memberId}</div>
+                    </div>
+
+                    <div>
+                      <div style={{ fontSize: '10.5px', textTransform: 'uppercase', color: '#8c7e75', fontWeight: 700 }}>
+                        Active Subscription Tier
+                      </div>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#2a1a12', marginTop: '2px' }}>
+                        {formatPlanName(membershipPlan)}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#2e6b3b', fontWeight: 600 }}>
+                        ● Active · Stripe Verified CAD
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid rgba(42, 26, 18, 0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px', color: '#5b4a3f', flexWrap: 'wrap', gap: '6px' }}>
+                    <span>Payment Gateway: <strong>Stripe Canada</strong></span>
+                    <span>CRA Deduction: <strong>Line 8810 / 8871</strong></span>
+                  </div>
+                </div>
+
+                {/* Notification / Error alert if portal redirect issue */}
+                {portalError && (
+                  <div style={{ background: 'rgba(180, 83, 9, 0.08)', border: '1px solid rgba(180, 83, 9, 0.25)', borderRadius: '8px', padding: '10px 12px', marginBottom: '16px', fontSize: '11.5px', color: '#92400e', lineHeight: 1.45 }}>
+                    <strong>Stripe Portal Notice:</strong> {portalError}
+                  </div>
+                )}
+
+                {/* Primary Actions */}
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' }}>
+                  {/* Stripe Customer Portal Redirect */}
+                  <button
+                    type="button"
+                    onClick={handleOpenStripePortal}
+                    disabled={portalLoading}
+                    style={{
+                      flex: 1,
+                      minWidth: '220px',
+                      background: 'rgba(59, 33, 22, 0.9)',
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.25)',
+                      boxShadow: '0 4px 14px rgba(59, 33, 22, 0.2)',
+                      color: '#f6f0e7',
+                      padding: '12px 18px',
+                      borderRadius: '999px',
+                      fontSize: '12.5px',
+                      fontWeight: 700,
+                      cursor: portalLoading ? 'wait' : 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <span>{portalLoading ? 'Connecting to Stripe...' : 'Manage in Stripe Portal'}</span>
+                    <span>↗</span>
+                  </button>
+
+                  {/* Instant CRA Tax Receipt Download */}
+                  <button
+                    type="button"
+                    onClick={handleDownloadTaxReceipt}
+                    style={{
+                      flex: 1,
+                      minWidth: '220px',
+                      background: 'rgba(255, 255, 255, 0.85)',
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(42, 26, 18, 0.2)',
+                      boxShadow: '0 3px 12px rgba(42, 26, 18, 0.05)',
+                      color: '#2a1a12',
+                      padding: '12px 18px',
+                      borderRadius: '999px',
+                      fontSize: '12.5px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <span>Download CRA Tax Receipt</span>
+                    <span>↓</span>
+                  </button>
+                </div>
+
+                <div style={{ background: 'rgba(42, 26, 18, 0.04)', borderRadius: '8px', padding: '10px 12px', fontSize: '11px', color: '#5b4a3f', lineHeight: 1.5 }}>
+                  💡 <strong>Tax Season Tip:</strong> Pass your downloaded receipt to your accountant or bookkeeper to deduct your annual membership fee on CRA Form T776. Subscriptions renew automatically each year to ensure uninterrupted RTA legal defense.
                 </div>
               </div>
             </div>

@@ -364,6 +364,90 @@ export function stripePlugin() {
           }
         });
       });
+
+      // 6. Create Stripe Customer Billing Portal Session
+      server.middlewares.use('/api/create-portal-session', async (req, res) => {
+        if (req.method !== 'POST') {
+          res.statusCode = 405;
+          res.end(JSON.stringify({ error: 'Method Not Allowed' }));
+          return;
+        }
+
+        let body = '';
+        req.on('data', (chunk) => {
+          body += chunk;
+        });
+
+        req.on('end', async () => {
+          try {
+            const secretKey = process.env.STRIPE_SECRET_KEY;
+            if (!secretKey) {
+              res.statusCode = 400;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(
+                JSON.stringify({
+                  error: 'STRIPE_SECRET_KEY is not configured in .env.local',
+                })
+              );
+              return;
+            }
+
+            const stripe = new Stripe(secretKey);
+            const { email, returnUrl } = JSON.parse(body || '{}');
+
+            if (!email || !email.includes('@')) {
+              res.statusCode = 400;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(
+                JSON.stringify({ error: 'Valid member email is required' })
+              );
+              return;
+            }
+
+            const cleanEmail = email.trim().toLowerCase();
+            const origin =
+              returnUrl || req.headers.origin || 'http://localhost:3000';
+
+            // 1. Find existing customer by email in Stripe
+            const customers = await stripe.customers.list({
+              email: cleanEmail,
+              limit: 1,
+            });
+
+            let customerId = customers.data[0]?.id;
+
+            // 2. If no customer exists yet under that email in Stripe, create one
+            if (!customerId) {
+              const newCustomer = await stripe.customers.create({
+                email: cleanEmail,
+                metadata: {
+                  source: 'landlords-bc-member-portal',
+                },
+              });
+              customerId = newCustomer.id;
+            }
+
+            // 3. Create Stripe Customer Billing Portal Session
+            const portalSession = await stripe.billingPortal.sessions.create({
+              customer: customerId,
+              return_url: `${origin}/dashboard` || `${origin}`,
+            });
+
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ url: portalSession.url }));
+          } catch (err: any) {
+            console.error('[Stripe Billing Portal Error]:', err.message);
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(
+              JSON.stringify({
+                error: err.message || 'Billing portal session creation failed',
+              })
+            );
+          }
+        });
+      });
     },
   };
 }
