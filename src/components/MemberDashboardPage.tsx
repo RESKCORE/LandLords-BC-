@@ -28,6 +28,19 @@ export const MemberDashboardPage: React.FC<MemberDashboardPageProps> = ({
   const [membershipPlan, setMembershipPlan] = useState('Individual Membership ($290 CAD / year)');
   const [downloadNotice, setDownloadNotice] = useState(false);
 
+  // Helper to nicely format plan tier names cleanly
+  const formatPlanName = (plan: string) => {
+    if (!plan) return 'Individual Membership ($290 CAD / year)';
+    const lower = plan.toLowerCase();
+    if (lower.includes('property') || lower.includes('590') || lower === 'property-manager') {
+      return 'Property Manager Membership ($590 CAD / year)';
+    }
+    if (lower.includes('individual') || lower.includes('290')) {
+      return 'Individual Membership ($290 CAD / year)';
+    }
+    return plan;
+  };
+
   // Notes state
   const [notes, setNotes] = useState<MemberNote[]>([]);
   const [newUnit, setNewUnit] = useState('');
@@ -61,7 +74,7 @@ export const MemberDashboardPage: React.FC<MemberDashboardPageProps> = ({
 
     const savedPlan = localStorage.getItem('pending_checkout_plan');
     if (savedPlan) {
-      setMembershipPlan(savedPlan);
+      setMembershipPlan(formatPlanName(savedPlan));
     }
 
     let assigned = localStorage.getItem('landlords_member_id');
@@ -352,8 +365,11 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
           {/* Center: Subscription Plan Badge */}
           <div
             style={{
-              background: 'rgba(236, 227, 215, 0.8)',
-              border: '1px solid rgba(42, 26, 18, 0.12)',
+              background: 'rgba(255, 255, 255, 0.65)',
+              backdropFilter: 'blur(14px)',
+              WebkitBackdropFilter: 'blur(14px)',
+              border: '1px solid rgba(255, 255, 255, 0.9)',
+              boxShadow: '0 3px 12px rgba(42, 26, 18, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
               padding: '6px 14px',
               borderRadius: '999px',
               fontSize: '12px',
@@ -365,7 +381,7 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
             }}
           >
             <span style={{ color: '#2e6b3b' }}>●</span>
-            <span>Plan: <strong>{membershipPlan}</strong></span>
+            <span>Plan: <strong>{formatPlanName(membershipPlan)}</strong></span>
           </div>
 
           {/* Right: Actions */}
@@ -374,8 +390,11 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
               href={CONTACT_INFO.phoneHref}
               style={{
                 background: 'rgba(255, 255, 255, 0.65)',
-                border: '1px solid rgba(42, 26, 18, 0.12)',
-                padding: '7px 14px',
+                backdropFilter: 'blur(14px)',
+                WebkitBackdropFilter: 'blur(14px)',
+                border: '1px solid rgba(255, 255, 255, 0.9)',
+                boxShadow: '0 3px 12px rgba(42, 26, 18, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
+                padding: '7px 15px',
                 borderRadius: '999px',
                 fontSize: '12px',
                 fontWeight: 600,
@@ -384,6 +403,7 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                 alignItems: 'center',
                 gap: '6px',
                 textDecoration: 'none',
+                transition: 'all 0.2s ease',
               }}
               title="Call Priority Advisor Helpline"
             >
@@ -395,8 +415,11 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
               onClick={onBackToHome}
               style={{
                 background: 'rgba(255, 255, 255, 0.65)',
-                border: '1px solid rgba(42, 26, 18, 0.12)',
-                padding: '7px 14px',
+                backdropFilter: 'blur(14px)',
+                WebkitBackdropFilter: 'blur(14px)',
+                border: '1px solid rgba(255, 255, 255, 0.9)',
+                boxShadow: '0 3px 12px rgba(42, 26, 18, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
+                padding: '7px 15px',
                 borderRadius: '999px',
                 fontSize: '12px',
                 fontWeight: 600,
@@ -405,6 +428,7 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
+                transition: 'all 0.2s ease',
               }}
             >
               <span>← Back to Home</span>
@@ -414,14 +438,18 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
               type="button"
               onClick={onSignOut}
               style={{
-                background: 'rgba(42, 26, 18, 0.06)',
-                border: '1px solid rgba(42, 26, 18, 0.1)',
-                padding: '7px 14px',
+                background: 'rgba(255, 255, 255, 0.45)',
+                backdropFilter: 'blur(14px)',
+                WebkitBackdropFilter: 'blur(14px)',
+                border: '1px solid rgba(42, 26, 18, 0.12)',
+                boxShadow: '0 2px 8px rgba(42, 26, 18, 0.04)',
+                padding: '7px 15px',
                 borderRadius: '999px',
                 fontSize: '12px',
                 fontWeight: 600,
                 color: '#5b4a3f',
                 cursor: 'pointer',
+                transition: 'all 0.2s ease',
               }}
             >
               Sign Out
@@ -455,7 +483,7 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
               Member Association Dashboard
             </h1>
             <p style={{ fontSize: '14px', color: '#5b4a3f', margin: 0 }}>
-              Welcome back, <strong>{userName}</strong> ({userEmail}). Your active <strong>{membershipPlan}</strong> provides complete statutory RTA defense coverage.
+              Welcome back, <strong>{userName}</strong> ({userEmail}). Your active <strong>{formatPlanName(membershipPlan)}</strong> provides complete statutory RTA defense coverage.
             </p>
           </div>
 
@@ -485,17 +513,31 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
           <div className="bento" style={{ marginTop: '0', gridTemplateColumns: '1.2fr 1fr 1fr' }}>
             
             {/* Card 1: Member Subscription & Protection Passport (Tall Left Anchor) */}
-            <div className="card c-big" style={{ background: '#3b2116' }}>
+            <div className="card c-big" style={{ background: '#3b2116', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '16px' }}>
               <img
                 src="/assets/landlord/sunlit-facade.svg"
                 alt="Protected BC property"
-                style={{ objectFit: 'cover', opacity: 0.85 }}
+                style={{ objectFit: 'cover', opacity: 0.45 }}
               />
-              <div style={{ position: 'relative', zIndex: 2 }}>
+
+              {/* Upper Frosted Glass Panel for Text Readability */}
+              <div
+                style={{
+                  position: 'relative',
+                  zIndex: 2,
+                  background: 'rgba(32, 17, 10, 0.78)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255, 255, 255, 0.16)',
+                  borderRadius: '20px',
+                  padding: '20px 18px',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)',
+                }}
+              >
                 <span
                   style={{
-                    background: 'rgba(46, 107, 59, 0.35)',
-                    border: '1px solid rgba(74, 222, 128, 0.5)',
+                    background: 'rgba(46, 107, 59, 0.4)',
+                    border: '1px solid rgba(74, 222, 128, 0.55)',
                     color: '#bbf7d0',
                     padding: '4px 10px',
                     borderRadius: '999px',
@@ -504,25 +546,25 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                     letterSpacing: '0.04em',
                     textTransform: 'uppercase',
                     display: 'inline-block',
-                    marginBottom: '12px',
+                    marginBottom: '10px',
                   }}
                 >
                   Member ID: {memberId} ✓ · Active
                 </span>
-                <h3 style={{ fontSize: '25px', lineHeight: 1.25, fontWeight: 700, margin: '0 0 10px' }}>
+                <h3 style={{ fontSize: '24px', lineHeight: 1.25, fontWeight: 700, margin: '0 0 10px', color: '#ffffff' }}>
                   Member Protection
                   <br />
-                  <span>&amp; Legal Defense Passport</span>
+                  <span style={{ color: '#f6f0e7' }}>&amp; Legal Defense Passport</span>
                 </h3>
-                <p className="desc" style={{ fontSize: '13px', lineHeight: 1.55, color: 'rgba(255, 255, 255, 0.88)' }}>
+                <p className="desc" style={{ fontSize: '13px', lineHeight: 1.55, color: 'rgba(255, 255, 255, 0.92)', margin: 0 }}>
                   Your active membership guarantees verified legal defense under the BC Residential Tenancy Act (RTA), priority advisor hotline support, and pre-formatted dispute evidence packages across all your rental units.
                 </p>
-                <div style={{ marginTop: '14px', padding: '12px 14px', background: 'rgba(0, 0, 0, 0.28)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.15)' }}>
+                <div style={{ marginTop: '14px', padding: '12px 14px', background: 'rgba(0, 0, 0, 0.35)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.15)' }}>
                   <div style={{ fontSize: '10.5px', textTransform: 'uppercase', color: 'rgba(255, 255, 255, 0.75)', fontWeight: 700 }}>
                     Active Subscription Tier
                   </div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#f6f0e7', marginTop: '2px' }}>
-                    {membershipPlan}
+                  <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#f6f0e7', marginTop: '2px' }}>
+                    {formatPlanName(membershipPlan)}
                   </div>
                   <div style={{ fontSize: '11px', color: '#bbf7d0', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <span>●</span> Annual Billing · RTA Protection Active
@@ -530,28 +572,73 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                 </div>
               </div>
 
-              <div style={{ position: 'relative', zIndex: 2 }}>
+              {/* Lower Frosted Glass Panel for Actions & Guarantees */}
+              <div
+                style={{
+                  position: 'relative',
+                  zIndex: 2,
+                  background: 'rgba(32, 17, 10, 0.78)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255, 255, 255, 0.16)',
+                  borderRadius: '20px',
+                  padding: '16px 18px',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                  marginTop: '14px',
+                }}
+              >
                 <div className="avatars" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div className="av-stack">
                     <img src="/assets/landlord/landlord-profile.svg" alt="Protected BC landlord" />
                     <img src="/assets/landlord/penthouse-living.svg" alt="BC rental residence" />
                     <img src="/assets/landlord/sunlit-facade.svg" alt="Protected building" />
                   </div>
-                  <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.9)' }}>
+                  <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.95)', fontWeight: 500 }}>
                     2,400+ protected BC property owners
                   </span>
                 </div>
 
+                {/* Glass UI Themed Action Button */}
                 <button
-                  className="btn-white"
                   type="button"
                   onClick={handleDownloadToolkit}
-                  style={{ fontWeight: 700 }}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.88)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                    border: '1px solid rgba(255, 255, 255, 0.95)',
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 1)',
+                    color: '#2a1a12',
+                    padding: '13px 20px',
+                    borderRadius: '999px',
+                    fontWeight: 700,
+                    fontSize: '13.5px',
+                    letterSpacing: '-0.01em',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    width: '100%',
+                    transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.98)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.88)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
                 >
-                  Download 2026 Legal Defense Kit ↓
+                  <span>Download 2026 Legal Defense Kit</span>
+                  <span style={{ fontSize: '15px' }}>↓</span>
                 </button>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '10px', fontSize: '11px', color: 'rgba(255, 255, 255, 0.85)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'rgba(255, 255, 255, 0.85)' }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -582,55 +669,85 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                 <p>
                   Direct instant downloads of mandatory BC tenancy forms with statutory notice checklists and proof of service protocols.
                 </p>
-                <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
+                  {/* Glass UI Button: RTB-30 */}
                   <button
                     type="button"
                     onClick={() => handleDownloadFormDocument(FORMS_CATALOGUE[1])}
                     style={{
-                      background: '#3b2116',
+                      background: 'rgba(59, 33, 22, 0.88)',
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.25)',
+                      boxShadow: '0 4px 14px rgba(59, 33, 22, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.25)',
                       color: '#f6f0e7',
-                      border: 'none',
-                      padding: '6px 12px',
-                      borderRadius: '8px',
-                      fontSize: '11px',
+                      padding: '7px 14px',
+                      borderRadius: '999px',
+                      fontSize: '11.5px',
                       fontWeight: 600,
                       cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.2s ease',
                     }}
                     title="Download RTB-30 10-Day Notice for Unpaid Rent"
                   >
-                    RTB-30 Notice ↓
+                    <span>RTB-30 Notice</span>
+                    <span>↓</span>
                   </button>
+
+                  {/* Glass UI Button: RTB-27 */}
                   <button
                     type="button"
                     onClick={() => handleDownloadFormDocument(FORMS_CATALOGUE[2])}
                     style={{
-                      background: 'rgba(42, 26, 18, 0.08)',
+                      background: 'rgba(255, 255, 255, 0.72)',
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.9)',
+                      boxShadow: '0 3px 12px rgba(42, 26, 18, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
                       color: '#2a1a12',
-                      border: '1px solid rgba(42, 26, 18, 0.12)',
-                      padding: '6px 12px',
-                      borderRadius: '8px',
-                      fontSize: '11px',
+                      padding: '7px 14px',
+                      borderRadius: '999px',
+                      fontSize: '11.5px',
                       fontWeight: 600,
                       cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.2s ease',
                     }}
                     title="Download RTB-27 Condition Inspection Report"
                   >
-                    RTB-27 Report ↓
+                    <span>RTB-27 Report</span>
+                    <span>↓</span>
                   </button>
+
+                  {/* Glass UI Button: View All 12+ Forms */}
                   <button
                     type="button"
                     onClick={() => setShowAllForms(true)}
                     style={{
-                      background: 'none',
-                      border: 'none',
+                      background: 'rgba(255, 255, 255, 0.55)',
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(42, 26, 18, 0.12)',
+                      boxShadow: '0 2px 8px rgba(42, 26, 18, 0.04)',
                       color: '#3b2116',
                       fontSize: '11.5px',
                       fontWeight: 700,
                       cursor: 'pointer',
-                      padding: '6px 4px',
+                      padding: '7px 14px',
+                      borderRadius: '999px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.2s ease',
                     }}
                   >
-                    View All 12+ Forms →
+                    <span>View All 12+ Forms</span>
+                    <span>→</span>
                   </button>
                 </div>
               </div>
@@ -673,9 +790,40 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                 <div className="val">
                   <span>100</span>%
                 </div>
-                <div className="ends">
-                  <span>Notice Error Risk: 0%</span>
-                  <span>Server-Sealed: 100%</span>
+                {/* High Contrast Statutory Metric Badges */}
+                <div className="ends" style={{ bottom: '2px', left: '8px', right: '8px' }}>
+                  <span
+                    style={{
+                      background: 'rgba(46, 107, 59, 0.12)',
+                      border: '1px solid rgba(46, 107, 59, 0.28)',
+                      color: '#1e542c',
+                      padding: '3px 8px',
+                      borderRadius: '999px',
+                      fontWeight: 700,
+                      fontSize: '10.5px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <span style={{ fontSize: '8px' }}>●</span> 0% Notice Error Risk
+                  </span>
+                  <span
+                    style={{
+                      background: 'rgba(59, 33, 22, 0.1)',
+                      border: '1px solid rgba(59, 33, 22, 0.22)',
+                      color: '#2a1a12',
+                      padding: '3px 8px',
+                      borderRadius: '999px',
+                      fontWeight: 700,
+                      fontSize: '10.5px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <span style={{ fontSize: '8px' }}>●</span> 100% Server-Sealed
+                  </span>
                 </div>
               </div>
               <div className="txt">
@@ -724,18 +872,26 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
               <div className="txt">
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <h4>Private Property Vault &amp; Unit Ledger</h4>
+                  {/* Glass UI Button: Add Unit Record */}
                   <button
                     type="button"
                     onClick={() => setIsAddingNote(true)}
                     style={{
-                      background: '#3b2116',
+                      background: 'rgba(59, 33, 22, 0.88)',
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.22)',
+                      boxShadow: '0 4px 14px rgba(59, 33, 22, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.25)',
                       color: '#f6f0e7',
-                      border: 'none',
-                      padding: '4px 10px',
+                      padding: '5px 12px',
                       borderRadius: '999px',
                       fontSize: '11px',
                       fontWeight: 600,
                       cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.2s ease',
                     }}
                   >
                     + Add Unit Record
@@ -762,36 +918,47 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
               <div className="txt">
                 <h4>2026 Statutory Rent Increase Calculator</h4>
                 <div style={{ margin: '8px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {/* Frosted Glass Input Box */}
                   <input
                     type="number"
                     value={rentInput}
                     onChange={(e) => setRentInput(Math.max(0, Number(e.target.value)))}
                     style={{
                       width: '95px',
-                      padding: '4px 8px',
-                      borderRadius: '6px',
-                      border: '1px solid rgba(42, 26, 18, 0.2)',
+                      padding: '5px 10px',
+                      borderRadius: '8px',
+                      background: 'rgba(255, 255, 255, 0.85)',
+                      backdropFilter: 'blur(8px)',
+                      WebkitBackdropFilter: 'blur(8px)',
+                      border: '1px solid rgba(42, 26, 18, 0.18)',
+                      boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                       fontSize: '12px',
                       fontWeight: 700,
+                      color: '#2a1a12',
                     }}
                     title="Current Rent CAD"
                   />
                   <span style={{ fontSize: '11px', color: '#5b4a3f' }}>
                     +3% = <strong>${newMaxRent.toFixed(2)}/mo</strong>
                   </span>
+                  {/* Glass UI Button: Copy RTB-7 */}
                   <button
                     type="button"
                     onClick={handleCopyRentCalc}
                     style={{
-                      background: '#3b2116',
+                      background: copiedRent ? 'rgba(46, 107, 59, 0.88)' : 'rgba(59, 33, 22, 0.88)',
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.22)',
+                      boxShadow: '0 4px 14px rgba(59, 33, 22, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.25)',
                       color: '#f6f0e7',
-                      border: 'none',
-                      padding: '5px 10px',
-                      borderRadius: '6px',
+                      padding: '5px 12px',
+                      borderRadius: '999px',
                       fontSize: '11px',
                       fontWeight: 600,
                       cursor: 'pointer',
                       marginLeft: 'auto',
+                      transition: 'all 0.2s ease',
                     }}
                   >
                     {copiedRent ? 'Copied ✓' : 'Copy RTB-7'}
@@ -856,15 +1023,19 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                   <button
                     type="submit"
                     style={{
-                      background: '#3b2116',
+                      background: 'rgba(59, 33, 22, 0.9)',
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.25)',
+                      boxShadow: '0 4px 14px rgba(59, 33, 22, 0.2)',
                       color: '#f6f0e7',
-                      border: 'none',
-                      padding: '10px',
-                      borderRadius: '8px',
+                      padding: '11px',
+                      borderRadius: '999px',
                       fontSize: '13px',
                       fontWeight: 700,
                       cursor: 'pointer',
                       marginTop: '6px',
+                      transition: 'all 0.2s ease',
                     }}
                   >
                     Save to Private Vault
@@ -923,14 +1094,18 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                     type="button"
                     onClick={() => setActiveNoteModal(null)}
                     style={{
-                      background: '#3b2116',
+                      background: 'rgba(59, 33, 22, 0.9)',
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.25)',
+                      boxShadow: '0 4px 14px rgba(59, 33, 22, 0.2)',
                       color: '#f6f0e7',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '6px',
+                      padding: '8px 18px',
+                      borderRadius: '999px',
                       fontSize: '12px',
                       fontWeight: 600,
                       cursor: 'pointer',
+                      transition: 'all 0.2s ease',
                     }}
                   >
                     Close
@@ -997,15 +1172,19 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                           type="button"
                           onClick={() => handleDownloadFormDocument(form)}
                           style={{
-                            background: '#3b2116',
+                            background: 'rgba(59, 33, 22, 0.9)',
+                            backdropFilter: 'blur(12px)',
+                            WebkitBackdropFilter: 'blur(12px)',
+                            border: '1px solid rgba(255, 255, 255, 0.25)',
+                            boxShadow: '0 4px 14px rgba(59, 33, 22, 0.18)',
                             color: '#f6f0e7',
-                            border: 'none',
                             padding: '8px 14px',
-                            borderRadius: '6px',
+                            borderRadius: '999px',
                             fontSize: '12px',
                             fontWeight: 700,
                             cursor: 'pointer',
                             flex: 1,
+                            transition: 'all 0.2s ease',
                           }}
                         >
                           {form.category === 'third-party' ? 'Open Portal ↗' : 'Download Document ↓'}
@@ -1016,15 +1195,22 @@ Mandatory Notice: Must serve Form RTB-7 at least 3 full rental payment months be
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
-                              background: 'rgba(42, 26, 18, 0.05)',
-                              border: '1px solid rgba(42, 26, 18, 0.12)',
+                              background: 'rgba(255, 255, 255, 0.75)',
+                              backdropFilter: 'blur(12px)',
+                              WebkitBackdropFilter: 'blur(12px)',
+                              border: '1px solid rgba(42, 26, 18, 0.15)',
+                              boxShadow: '0 2px 8px rgba(42, 26, 18, 0.05)',
                               color: '#2a1a12',
-                              padding: '8px 12px',
-                              borderRadius: '6px',
+                              padding: '8px 14px',
+                              borderRadius: '999px',
                               fontSize: '12px',
                               fontWeight: 600,
                               textDecoration: 'none',
                               whiteSpace: 'nowrap',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'all 0.2s ease',
                             }}
                           >
                             PDF ↗
