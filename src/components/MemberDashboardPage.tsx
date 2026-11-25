@@ -201,6 +201,314 @@ Direct Advisory Email: support@landlordsbc.org
     URL.revokeObjectURL(url);
   };
 
+  const handleDownloadFormDocument = (form: any) => {
+    // If it's a pure external website link like government portal or BC Laws
+    if (form.id === 'gov-portal' || form.id === 'gov-bclaws') {
+      window.open(form.link, '_blank');
+      return;
+    }
+
+    const dateStr = new Date().toLocaleDateString('en-CA', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    let specificContent = '';
+
+    switch (form.id) {
+      case 'rtb-1':
+        specificContent = `RESIDENTIAL TENANCY AGREEMENT (BC RTA STANDARD CLAUSES)
+Statutory Authority: BC Residential Tenancy Act [SBC 2002] c. 78, Sections 12-14
+
+1. PARTIES:
+- Landlord Legal Full Name: __________________________________________________
+- Tenant(s) Full Name(s): ____________________________________________________
+- Rental Unit Address: _______________________________________________________
+
+2. TERM & TENANCY COMMENCEMENT:
+- Tenancy Start Date: ________________________
+- Tenancy Type: [ ] Month-to-Month Periodic Tenancy   [ ] Fixed Length (ending: __________)
+- Note: Under BC law, vacate clauses in fixed-term agreements are prohibited except under Section 13.1 of the Regulations.
+
+3. RENT & UTILITIES:
+- Monthly Rent: $_________________ CAD, payable in advance on the 1st of each month.
+- Payment Methods: [ ] Interac e-Transfer   [ ] Cheque   [ ] Pre-authorized debit
+- Utilities Included: [ ] Heat  [ ] Water  [ ] Electricity  [ ] Sewage  [ ] Internet
+
+4. SECURITY & PET DAMAGE DEPOSIT (RTA Section 19):
+- Security Deposit: $_________________ (Maximum 50% of 1 month's rent)
+- Pet Damage Deposit: $_________________ (Maximum 50% of 1 month's rent)
+- Date Received: ____________________
+- Trust Account Location: ____________________________________________________
+
+5. STATUTORY MOVE-IN INSPECTION (RTA Section 23):
+- Condition inspection report (Form RTB-27) must be completed on move-in day.`;
+        break;
+
+      case 'rtb-30':
+        specificContent = `10-DAY NOTICE TO END TENANCY FOR UNPAID RENT OR UTILITIES
+Statutory Authority: BC Residential Tenancy Act, Section 46 & Section 90
+
+WARNING TO TENANT:
+You have 5 CALENDAR DAYS after receiving this notice to:
+1. Pay the overdue rent in full (which cancels this notice); OR
+2. Dispute this notice by filing an application for dispute resolution at the RTB.
+If you do neither, your tenancy ends 10 days after the deemed date of service, and the landlord may apply for an immediate Order of Possession.
+
+1. NOTICE DETAILS:
+- Tenant Legal Name: _________________________________________________________
+- Rental Unit Address: _______________________________________________________
+- Total Unpaid Rent Overdue: $_________________ CAD (Due on: __________________)
+- Total Unpaid Utilities Overdue (if 30-day written demand was served): $________ CAD
+
+2. STATUTORY DEEMED SERVICE CALCULATION (RTA Section 88 & 90):
+- Method of Service:
+  [ ] Handed in person to adult resident: Deemed served TODAY.
+  [ ] Attached to front door or in mailbox: Deemed served 3 FULL DAYS LATER.
+  [ ] Sent by registered mail / regular mail: Deemed served 5 FULL DAYS LATER.
+  [ ] Emailed (with signed RTB-51 consent): Deemed served 3 FULL DAYS LATER.
+
+- Date Notice Delivered: ____________________
+- Legally Deemed Received Date: ____________________
+- Earliest Legal Vacate Date (10 days after deemed receipt): ____________________`;
+        break;
+
+      case 'rtb-27':
+        specificContent = `CONDITION INSPECTION REPORT PROTOCOL & CHECKLIST
+Statutory Authority: BC Residential Tenancy Act, Sections 23, 24, 35, 36
+
+CRITICAL LEGAL NOTICE FOR LANDLORD:
+Under Section 24 and 36 of the RTA, if a landlord does not offer at least 2 opportunities for inspection (the second in writing using Form RTB-22) and complete this written report, the landlord's right to claim against the security or pet deposit for damage to property is EXTINGUISHED.
+
+ROOM-BY-ROOM INSPECTION PROTOCOL:
+Unit Address: ________________________________________________________________
+Move-in Inspection Date: ____________________ Time: __________________
+Move-out Inspection Date: ___________________ Time: __________________
+
+Condition Key: G = Good | F = Fair | P = Poor | D = Damaged | ST = Stained
+
+ROOM / AREA                    MOVE-IN STATUS       MOVE-OUT STATUS     COMMENTS / PHOTOS
+1. Entryway / Front Door       [   ]                [   ]               __________________
+2. Living Room Walls/Floors    [   ]                [   ]               __________________
+3. Kitchen Appliances/Oven     [   ]                [   ]               __________________
+4. Kitchen Sink & Plumbing     [   ]                [   ]               __________________
+5. Smoke Detector Tested       [   ] PASS           [   ] PASS          Expiry: __________
+6. Master Bedroom & Windows    [   ]                [   ]               __________________
+7. Bathroom Shower/Caulking    [   ]                [   ]               __________________
+8. Heating / Thermostat        [   ] PASS           [   ] PASS          __________________
+
+SIGN-OFF & SIGNATURES:
+Landlord Signature: ___________________________ Date: _______________________
+Tenant Signature: _____________________________ Date: _______________________`;
+        break;
+
+      case 'rtb-7':
+        specificContent = `NOTICE OF RENT INCREASE (STATUTORY FORM RTB-7 PROTOCOL)
+Statutory Authority: BC Residential Tenancy Act, Part 3, Sections 41-43
+
+STATUTORY RULES FOR BC RENT INCREASES:
+1. Annual Maximum Percentage: 3.0% (for calendar year 2026).
+2. Frequency: A landlord may only increase rent once every 12 months.
+3. Minimum Notice Period: At least 3 full calendar rental payment months BEFORE the effective date.
+   Example: If rent is due on the 1st of the month, notice served on Oct 15 cannot take effect until Feb 1.
+
+CALCULATION WORKSHEET:
+- Current Monthly Rent: $_________________ CAD
+- Allowable Increase (Max 3.0%): +$_________________ CAD
+- New Monthly Rent: $_________________ CAD
+- Date Notice Served: _________________________
+- Method of Service: [ ] In-person  [ ] Door posting (3 days)  [ ] Mail (5 days)
+- Effective Date of Increase: ___________________ (Must be after 3 full rental months)`;
+        break;
+
+      case 'rtb-8':
+        specificContent = `MUTUAL AGREEMENT TO END A TENANCY (FORM RTB-8 PROTOCOL)
+Statutory Authority: BC Residential Tenancy Act, Section 44(1)(c)
+
+This agreement is executed voluntarily between landlord and tenant to end the tenancy without requiring statutory notice, dispute resolution hearings, or eviction filings.
+
+1. TENANCY PARTICULARS:
+- Landlord Name: _____________________________________________________________
+- Tenant Name(s): ____________________________________________________________
+- Rental Unit Address: _______________________________________________________
+
+2. MUTUAL SURRENDER TERMS:
+- The landlord and tenant mutually agree that the tenancy will end on:
+  Date: ________________________ Time: 1:00 PM (statutory standard)
+- The tenant agrees to deliver vacant possession, remove all personal property, and return all keys/fobs to the landlord by this date and time.
+- Move-out condition inspection will take place on: _____________________________
+
+3. VOLUNTARY CONSENT:
+Both parties acknowledge that they are entering this agreement freely and with full understanding of their statutory rights under the BC Residential Tenancy Act.
+
+Landlord Signature: ___________________________ Date: _______________________
+Tenant Signature: _____________________________ Date: _______________________`;
+        break;
+
+      case 'llbc-t1':
+        specificContent = `MOVE-IN PRACTICAL SEQUENCE & KEY HANDOVER PROTOCOL (LLBC-T1)
+Landlords BC Standard Operating Procedure
+
+PHASE 1: PRE-OCCUPANCY SAFETY VERIFICATION
+[ ] Smoke and Carbon Monoxide detectors tested and verified working (expiry date noted).
+[ ] Main water shut-off valve located and demonstrated to tenant.
+[ ] Electrical breaker panel identified with labeled circuits.
+[ ] Water heater and plumbing inspected for zero active seepage.
+[ ] Keys and access fobs tested on all exterior and suite locks.
+
+PHASE 2: KEY HANDOVER RECEIPT
+- Number of Building Access Fobs Issued: _____
+- Number of Suite Keys Issued: _____
+- Number of Mailbox Keys Issued: _____
+- Garage / Parking Remote ID: _____
+
+Tenant Signature Confirming Key Receipt: _____________________ Date: __________`;
+        break;
+
+      case 'llbc-t2':
+        specificContent = `MAINTENANCE REQUEST & REPAIR TRACKING LOG (LLBC-T2)
+Statutory Authority: BC Residential Tenancy Act, Sections 29, 32 & 33
+
+UNIT: __________________________________ TENANT: _____________________________
+
+DATE LOGGED: ___________________________ EMERGENCY REPAIR: [ ] YES  [ ] NO
+ISSUE REPORTED:
+______________________________________________________________________________
+______________________________________________________________________________
+
+NOTICE OF ENTRY (RTA Section 29):
+Under Section 29, except in emergencies, landlords must provide at least 24 hours written notice before entering, stating purpose, date, and entry window between 8:00 AM and 9:00 PM.
+- Notice of Entry Served Date: ________________ Time: ______________
+- Service Method: [ ] Door Posting (3-day rule applies)  [ ] In Person  [ ] Email
+
+REPAIR COMPLETION & INVOICE RECORD:
+- Contractor / Vendor: _______________________________________________________
+- Work Completed Date: _________________ Cost: $________________ CAD
+- Tenant Sign-off / Confirmation: ____________________________________________`;
+        break;
+
+      case 'llbc-t3':
+        specificContent = `ANNUAL RENT INCREASE CALCULATION & SERVICE WORKSHEET (LLBC-T3)
+British Columbia Statutory Rent Formula Verification
+
+1. ELIGIBILITY VERIFICATION:
+[ ] Has it been at least 12 months since the tenancy started or since the last rent increase?
+    Last Increase / Start Date: ____________________
+[ ] Is the proposed increase at or below the 2026 provincial cap (3.0%)?
+
+2. MATHEMATICAL CALCULATION:
+- Current Monthly Rent: $_________________ CAD
+- Provincial Allowable Rate: 3.0% (Multiply by 0.03)
+- Statutory Cap Amount: $_________________ CAD (Round to nearest cent)
+- Proposed New Monthly Rent: $_________________ CAD
+
+3. 3-MONTH SERVICE TIMELINE VERIFICATION:
+- Service Date: ____________________
+- Service Method: ____________________
+- Deemed Service Date: ____________________
+- Next 3 Full Rental Payment Cycles:
+  Month 1: ____________________
+  Month 2: ____________________
+  Month 3: ____________________
+- Valid Legal Effective Date: ____________________ (Must be on or after 1st of Month 4)`;
+        break;
+
+      case 'llbc-ex1':
+        specificContent = `ANNOTATED RTB DISPUTE EVIDENCE INDEX (MODEL PACKAGE LLBC-EX1)
+Residential Tenancy Branch Arbitration Evidence Preparation Standard
+
+RULES FOR SUBMITTING EVIDENCE TO THE RTB DISPUTE ACCESS SITE:
+1. File naming must be strictly sequential so arbitrators can navigate easily.
+2. Formats accepted: PDF, JPG, PNG, MP4, MP3.
+3. Every document must have matching timestamps.
+
+MODEL EVIDENCE PACKAGE STRUCTURE:
+File 01: 01_TenancyAgreement_RTB1_Signed_2025-09-01.pdf
+File 02: 02_ConditionInspectionReport_RTB27_MoveIn_2025-09-01.pdf
+File 03: 03_10DayNotice_RTB30_UnpaidRent_2026-10-15.pdf
+File 04: 04_ProofOfService_DoorPostingPhoto_TimeStamped_2026-10-15.jpg
+File 05: 05_BankStatement_ProofOfNonPayment_2026-10-20.pdf
+File 06: 06_WrittenDemandLetters_SMS_Log_2026-10-12.pdf
+
+PRE-HEARING TIMELINES:
+- Applicant evidence must be served to respondent and RTB at least 14 days before hearing.
+- Respondent evidence must be served at least 7 days before hearing.`;
+        break;
+
+      case 'llbc-ex2':
+        specificContent = `SAMPLE WRITTEN WARNING: REPEATED DISTURBANCE & NOISE (LLBC-EX2)
+Statutory Pre-Notice Documentation under BC RTA Section 47(1)(d)
+
+DATE: ___________________________
+TO TENANT(S): ________________________________________________________________
+RENTAL UNIT ADDRESS: _________________________________________________________
+
+RE: FORMAL WRITTEN WARNING — UNREASONABLE DISTURBANCE / BREACH OF MATERIAL TERM
+
+Dear Tenant(s),
+
+This letter serves as formal written notice regarding documented unreasonable disturbance occurring at your rental unit in violation of Section 28 (Quiet Enjoyment) and Section 47 of the BC Residential Tenancy Act.
+
+INCIDENT PARTICULARS:
+- Date of Occurrence: ______________________ Time: __________________
+- Specific Nature of Incident: ________________________________________________
+______________________________________________________________________________
+
+CORRECTIVE ACTION REQUIRED:
+You are required to immediately cease the aforementioned activity and adhere to quiet hours. Failure to correct this behavior will result in the immediate issuance of an official One-Month Notice to End Tenancy for Cause (Form RTB-33) under Section 47 of the Residential Tenancy Act.
+
+Sincerely,
+
+Landlord Representative Signature: ___________________________________________
+Landlords BC Member ID: ${memberId}`;
+        break;
+
+      default:
+        specificContent = `${form.title.toUpperCase()}
+Document Code: ${form.code}
+Category: ${form.category}
+
+OVERVIEW & PURPOSE:
+${form.description}
+
+STATUTORY INSTRUCTIONS & COMPLIANCE STEPS:
+1. Ensure all dates are recorded in accordance with RTA Section 88 & 90 deemed service rules.
+2. Retain completed copies in your Landlords BC Private Documentation Vault.
+3. For disputes before the Residential Tenancy Branch, number all evidence files sequentially.`;
+        break;
+    }
+
+    const documentContent = `========================================================================
+LANDLORDS BC — STATUTORY FORM & COMPLIANCE DOSSIER
+Document Title: ${form.title} (${form.code})
+Category: ${form.category.toUpperCase()}
+Active Member ID: ${memberId}
+Registered Account: ${userEmail}
+Jurisdiction: British Columbia, Canada (RTA SBC 2002, c. 78)
+Date Generated: ${dateStr}
+Zero-Disclosure Charter: Verified Confidential Association Document
+========================================================================
+
+${specificContent}
+
+========================================================================
+Landlords BC Priority Advisor Line: 1-800-555-0199
+Official RTB Portal: https://www2.gov.bc.ca/gov/content/housing-tenancy/residential-tenancies
+© 2026 Landlords BC Association. All rights reserved.
+========================================================================`;
+
+    const blob = new Blob([documentContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Landlords-BC-${form.code}-${form.title.replace(/[^a-zA-Z0-9]/g, '_')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   // Rent Increase calculations
   const rentIncreaseAmount = Math.round(rentInput * 0.03 * 100) / 100;
   const newMaxRent = rentInput + rentIncreaseAmount;
@@ -1198,31 +1506,59 @@ Tenant 5-Day Dispute Window Closes: ${formatDate(disputeDeadlineDate)}
                       </p>
                     </div>
 
-                    <a
-                      href={form.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        background: 'rgba(42, 26, 18, 0.05)',
-                        border: '1px solid rgba(42, 26, 18, 0.12)',
-                        color: '#2a1a12',
-                        padding: '8px 14px',
-                        borderRadius: '8px',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        textDecoration: 'none',
-                        transition: 'background 0.15s ease',
-                      }}
-                      onMouseOver={(e) => (e.currentTarget.style.background = 'rgba(42, 26, 18, 0.1)')}
-                      onMouseOut={(e) => (e.currentTarget.style.background = 'rgba(42, 26, 18, 0.05)')}
-                    >
-                      <span>Download Official PDF</span>
-                      <span>↗</span>
-                    </a>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadFormDocument(form)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          background: '#3b2116',
+                          color: '#f6f0e7',
+                          border: 'none',
+                          padding: '9px 16px',
+                          borderRadius: '8px',
+                          fontSize: '12.5px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          flex: '1 1 140px',
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                          transition: 'opacity 0.15s ease',
+                        }}
+                      >
+                        <span>{form.category === 'third-party' ? 'Open Portal' : 'Download Document'}</span>
+                        <span>{form.category === 'third-party' ? '↗' : '↓'}</span>
+                      </button>
+
+                      {form.isExternal && form.link && form.link.startsWith('http') && form.category !== 'third-party' && (
+                        <a
+                          href={form.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '5px',
+                            background: 'rgba(42, 26, 18, 0.05)',
+                            border: '1px solid rgba(42, 26, 18, 0.12)',
+                            color: '#2a1a12',
+                            padding: '9px 12px',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            textDecoration: 'none',
+                            whiteSpace: 'nowrap',
+                          }}
+                          title="Open official government PDF directly"
+                        >
+                          <span>Official PDF</span>
+                          <span>↗</span>
+                        </a>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
