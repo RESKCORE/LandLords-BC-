@@ -603,6 +603,9 @@ MANDATORY RTB DISPUTE ADMISSIBILITY RULES:
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: userEmail,
+          plan: membershipPlan,
+          memberId: memberId,
+          userName: userName,
           returnUrl: window.location.origin,
         }),
       });
