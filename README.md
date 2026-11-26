@@ -4,231 +4,339 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-7.0.2-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-8.3.0-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Tailwind CSS v4](https://img.shields.io/badge/TailwindCSS-v4.3-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Stripe CAD](https://img.shields.io/badge/Stripe-CAD%20Billing-635BFF?logo=stripe&logoColor=white)](https://stripe.com/)
+[![Stripe Subscriptions](https://img.shields.io/badge/Stripe-Recurring%20CAD%20Billing-635BFF?logo=stripe&logoColor=white)](https://stripe.com/)
 [![Jurisdiction](https://img.shields.io/badge/Jurisdiction-British%20Columbia%20(RTA)-2e6b3b)](https://www.bclaws.gov.bc.ca/civix/document/id/complete/statreg/02078_01)
+[![CRA T776](https://img.shields.io/badge/CRA%20Tax-Form%20T776%20Line%208810-b45309)](https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/t4036.html)
 [![License](https://img.shields.io/badge/License-Proprietary%20Member%20Charter-3b2116)](#disclaimer--legal-notice)
 
-A modern, privacy-first statutory compliance portal, legal defense passport, and documentation vault engineered specifically for British Columbia residential rental housing providers operating under the **BC Residential Tenancy Act [SBC 2002] c. 78 (RTA)** and the **Residential Tenancy Branch (RTB)** arbitration framework.
+A modern, privacy-first statutory compliance portal, legal defense passport, and documentation vault engineered specifically for British Columbia residential housing providers operating under the **BC Residential Tenancy Act [SBC 2002] c. 78 (RTA)** and the **Residential Tenancy Branch (RTB)** arbitration framework.
 
 ---
 
 ## 📑 Table of Contents
 
-- [Executive Overview & Purpose](#-executive-overview--purpose)
-- [Key Features & System Architecture](#-key-features--system-architecture)
-  - [1. Public Advocacy & Intake Portal](#1-public-advocacy--intake-portal)
-  - [2. Member Association Dashboard (`/dashboard`)](#2-member-association-dashboard-dashboard)
-  - [3. Interactive In-Page "Mini Screens" (Modals)](#3-interactive-in-page-mini-screens-modals)
-  - [4. Zero-Disclosure Privacy Charter & Device Encryption](#4-zero-disclosure-privacy-charter--device-encryption)
-  - [5. CRA Real Estate Rental Tax Compliance (Form T776)](#5-cra-real-estate-rental-tax-compliance-form-t776)
-- [Technology Stack](#-technology-stack)
-- [Project Directory Structure](#-project-directory-structure)
-- [API Reference & Serverless Endpoints](#-api-reference--serverless-endpoints)
-- [Quick Start (Local Development)](#-quick-start-local-development)
-  - [1. Prerequisites](#1-prerequisites)
-  - [2. Installation](#2-installation)
-  - [3. Environment Configuration](#3-environment-configuration)
-  - [4. Run Local Dev Server](#4-run-local-dev-server)
-- [Available Scripts](#-available-scripts)
-- [Stripe Sandbox Testing](#-stripe-sandbox-testing)
-- [Production Deployment Guide](#-production-deployment-guide)
-  - [Option A: Vercel (Recommended Serverless Deployment)](#option-a-vercel-recommended-serverless-deployment)
-  - [Option B: Render / Railway / Docker / VPS (Node.js Server)](#option-b-render--railway--docker--vps-nodejs-server)
-- [Statutory Legislation & Citations](#-statutory-legislation--citations)
-- [Disclaimer & Legal Notice](#-disclaimer--legal-notice)
+- [1. Executive Overview & Purpose](#1-executive-overview--purpose)
+- [2. System Architecture & Workflows](#2-system-architecture--workflows)
+  - [Subscription & Automated Onboarding Lifecycle](#subscription--automated-onboarding-lifecycle)
+  - [Zero-Disclosure Client Vault Architecture](#zero-disclosure-client-vault-architecture)
+- [3. Membership Tiers & Billing Specifications](#3-membership-tiers--billing-specifications)
+- [4. Member Association Bento Dashboard](#4-member-association-bento-dashboard)
+  - [Interactive 5-Card Layout](#interactive-5-card-layout)
+  - [Card 1: Member Legal Defense Passport](#card-1-member-legal-defense-passport)
+  - [Card 2: Official RTB Statutory Gateway](#card-2-official-rtb-statutory-gateway)
+  - [Card 3: Billing & CRA Tax Deductible Invoices](#card-3-billing--cra-tax-deductible-invoices)
+  - [Card 4: Private Property Vault & Unit Ledger](#card-4-private-property-vault--unit-ledger)
+  - [Card 5: 2026 Statutory Rent Increase Engine](#card-5-2026-statutory-rent-increase-engine)
+- [5. Interactive In-Page Mini Screens](#5-interactive-in-page-mini-screens)
+- [6. Automated Transactional Email Engine](#6-automated-transactional-email-engine)
+- [7. CRA Real Estate Rental Tax Compliance (Form T776)](#7-cra-real-estate-rental-tax-compliance-form-t776)
+- [8. Technology Stack](#8-technology-stack)
+- [9. Project Directory Structure](#9-project-directory-structure)
+- [10. Complete API Reference](#10-complete-api-reference)
+- [11. Quick Start & Local Development](#11-quick-start--local-development)
+- [12. Stripe Test Mode & Production Migration Guide](#12-stripe-test-mode--production-migration-guide)
+- [13. Production Deployment Guide](#13-production-deployment-guide)
+- [14. Statutory Legislation & Legal Citations](#14-statutory-legislation--legal-citations)
+- [15. Disclaimer & Legal Notice](#15-disclaimer--legal-notice)
 
 ---
 
-## 🏛️ Executive Overview & Purpose
+## 1. Executive Overview & Purpose
 
-Navigating British Columbia's residential tenancy regulations requires strict adherence to statutory timelines, unedited government forms, and evidentiary standards. Procedural defects—such as an incorrect service buffer date under Section 90 or an omitted condition inspection report under Section 23—routinely result in RTB arbitrators dismissing landlord claims or invalidating legal notices.
+Navigating British Columbia's residential tenancy framework requires strict adherence to statutory timelines, unedited government notices, and evidentiary burdens of proof. Procedural defects—such as an incorrect service buffer date under Section 90 or an omitted condition inspection report under Section 23—routinely result in RTB arbitrators dismissing landlord claims or invalidating legal notices.
 
 **Landlords BC** bridges this gap by delivering:
-- **Instant Statutory Document Access:** Direct downloads of verified, unedited RTB notices and agreements paired with procedural guidance.
-- **Evidentiary Rigor:** Formatted dispute dossiers that satisfy the RTB's evidence upload rules (indexed filenames, signed declarations, timestamped photos).
-- **Automated Statutory Calculations:** Live lead-time calculations for deemed service dates and allowable annual rent increases (3.0% cap for 2026).
-- **Absolute Privacy (Zero-Disclosure):** Encrypted local client storage ensuring private property and dispute records never leak to public registries or tenant blacklists.
-- **CRA Audit Compliance:** Form T776 tax deduction receipting classifying annual association dues as 100% tax-deductible rental business expenses.
+* **Statutory Compliance Gateway:** Direct, unedited RTB notice downloads paired with statutory service timing protocols.
+* **Automated Recurring Billing Engine:** Fully automated monthly and annual recurring membership subscriptions executed via Stripe.
+* **Instant Session Confirmation & Welcome Dossier:** Automated retrieval of customer checkout details from Stripe with instant transactional email delivery to both member and host.
+* **Evidentiary Rigor:** Formatted dispute evidence packages ready for upload to the RTB Dispute Access Portal.
+* **Automated Statutory Calculations:** Live lead-time calculations for deemed service dates and allowable annual rent increases (3.0% cap for 2026).
+* **Zero-Disclosure Privacy Charter:** Local client-side encrypted storage ensuring private property and dispute records never leak to public registries.
+* **CRA Audit Compliance:** Form T776 tax deduction receipting classifying annual association dues as 100% tax-deductible rental business expenses.
 
 ---
 
-## ⚡ Key Features & System Architecture
+## 2. System Architecture & Workflows
 
-### 1. Public Advocacy & Intake Portal
-* **Golden Luxury & Glass UI Aesthetic:** Warm, authoritative design system (`#f6f0e7`, `#3b2116`, `#2a1a12`) built with CSS backdrop blur filters, smooth Lenis scrolling, and responsive layouts.
-* **Dual-Tier Annual Membership:**
-  * **Individual Landlord Membership (`$290 CAD / year`):** Full statutory RTA defense coverage, unedited RTB form access, and priority advisor helpline access.
-  * **Property Manager Membership (`$590 CAD / year`):** Multi-unit property ledger support, commercial-scale dispute dossiers, and expedited advisor routing.
-* **Confidential Tenancy Experience Intake:** Secure submission form allowing rental owners to submit anonymized dispute experiences, automatically dispatched to the association host inbox via SMTP.
-* **Priority Advisor Helpline:** Integrated telephone hotline (**1-888-330-6707**, Mon–Fri, 9:00 AM – 4:30 PM PT).
-* **Instant Authentication & Identity Sync:** Google Identity Services (OAuth) integration combined with instant Stripe CAD checkout and session verification.
+### Subscription & Automated Onboarding Lifecycle
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Member as Landlord / Property Manager
+    participant App as Frontend (React 19 / Vite)
+    participant API as Backend Middleware (/api)
+    participant Stripe as Stripe Billing Infrastructure
+    participant SMTP as Transactional Email (Gmail / SES)
+    actor Host as Association Host / Admin
+
+    Member->>App: Selects Tier (Individual, PM, or Custom)
+    App->>API: POST /api/create-checkout-session (plan, interval, billingType)
+    API->>Stripe: stripe.checkout.sessions.create(mode: 'subscription', recurring)
+    Stripe-->>API: Returns Session URL & ID
+    API-->>App: Redirects Member to Stripe Checkout
+    Member->>Stripe: Enters Payment Details & Subscribes
+    Stripe-->>App: Redirects to App (?status=success&session_id=cs_test_...)
+    App->>API: POST /api/confirm-session { sessionId }
+    API->>Stripe: stripe.checkout.sessions.retrieve(sessionId)
+    Stripe-->>API: Returns Customer Details (Email, Name, Active Subscription)
+    API->>API: Registers Member in members.json & local registry
+    API->>SMTP: Dispatches Welcome Legal Dossier & Tax Receipt
+    SMTP-->>Member: To: Member Inbox (Member ID, RTA Defense Dossier, Helpline)
+    SMTP-->>Host: BCC: Host Inbox (Instant New Member Payment Alert)
+    API-->>App: Confirmed (Active Member ID)
+    App-->>Member: Unlocks Full Bento Member Dashboard
+```
+
+### Zero-Disclosure Client Vault Architecture
+
+```mermaid
+flowchart TD
+    subgraph ClientBrowser["Client-Side Sandbox (Browser)"]
+        UI["Member Dashboard UI"]
+        Vault["Property & Unit Ledger State"]
+        Crypto["Local Storage Encryption Engine"]
+        Storage[("Encrypted Local Storage")]
+    end
+
+    subgraph External["External Network Boundaries"]
+        StripeAPI["Stripe API (Billing & Invoices Only)"]
+        SMTPRelay["Verified SMTP Host (Receipts Only)"]
+    end
+
+    UI --> Vault
+    Vault --> Crypto
+    Crypto <--> Storage
+    UI -.->|"Session & Billing Only"| StripeAPI
+    UI -.->|"Intake Testimonies Only"| SMTPRelay
+
+    note1["NO PROPERTY ADDRESSES, TENANT RECORDS, OR ARBITRATION DOSSIERS ARE STORED ON CLOUD SERVERS."]
+    style note1 fill:#f6f0e7,stroke:#3b2116,stroke-width:1px
+```
 
 ---
 
-### 2. Member Association Dashboard (`/dashboard`)
-The member portal features a 5-card Bento Grid layout:
+## 3. Membership Tiers & Billing Specifications
+
+All memberships are processed in Canadian Dollars (`CAD`) via Stripe's recurring subscription engine:
+
+| Tier | Price | Interval | Billing Cycle | Target Audience | Primary Features |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Individual Plan** | **$290 CAD** | Monthly | Recurring every 30 days | Self-Managing Landlords | Complete RTA statutory defense, 12+ official RTB forms, 2026 rent calculator, member advisor helpline. |
+| **Property Manager Plan** | **$590 CAD** | Annual | Recurring every 365 days | Licensed Agents & Multi-Portfolio Owners | Multi-unit property vault, tenant ledger tracking, 15-day deposit return countdown, expedited advisor routing. |
+| **Custom Portfolio Plan** | **$999 CAD** | Annual | Recurring annually | Enterprise Owners (6+ Units) | Bespoke portfolio regulatory defense, custom arbitration dossier structuring, high-priority helpline routing. |
+
+---
+
+## 4. Member Association Bento Dashboard
+
+The Member Portal (`/?page=dashboard`) utilizes a 5-card Bento Grid layout engineered for rapid situational awareness during landlord-tenant disputes:
 
 ```
 ┌───────────────────────────────────────┬───────────────────────────────────────┬───────────────────────────────────────┐
-│ Card 1: Member Protection Passport    │ Card 2: Official RTB Forms Gateway    │ Card 3: Billing & CRA Tax Invoices    │
-│ • Identity: BC-MEM-8421 ✓             │ • RTB-30, RTB-27, RTB-7, RTB-33       │ • Invoice: LBC-INV-8421-2026          │
-│ • Tier: Individual / Property Manager │ • Deemed Service Rules (Sec 88/90)    │ • $290.00 CAD Total (GST/PST Exempt)  │
-│ • Legal Defense Kit Download          │ • Proof of Service Checklist (RTB-34) │ • Stripe Portal ↗ & Tax Receipt ↓     │
+│ Card 1: Member Protection Passport    │ Card 2: Official RTB Statutory Gateway│ Card 3: Billing & CRA Tax Invoices    │
+│ • Member ID: BC-MEM-8421 ✓            │ • RTB-30, RTB-27, RTB-7, RTB-33       │ • Invoice: LBC-INV-8421-2026          │
+│ • Tier: Individual / PM / Custom      │ • Deemed Service Timings (Sec 88/90)  │ • 100% Tax Deductible (CRA Line 8810) │
+│ • Download Legal Defense Kit          │ • Proof of Service Checklist          │ • Stripe Portal ↗ & PDF Invoices      │
 ├───────────────────────────────────────┴───────────────────────────────────────┴───────────────────────────────────────┤
 │ Card 4: Private Property Vault & Unit Ledger  │ Card 5: 2026 Statutory Rent Increase Engine                           │
-│ • Unit records, move-in dates & trust ledger  │ • Real-time 3.0% allowable increase calculation                       │
-│ • 15-day deposit return countdown alerts      │ • Section 42 3-full-rental-month lead time & service buffer dates     │
-│ • Export RTB Dispute Evidence Dossier         │ • Pre-filled Form RTB-7 schedule generator & copy/download            │
+│ • Unit records, move-in dates & trust balances│ • 3.0% maximum allowable annual rent increase cap                     │
+│ • 15-day security deposit return countdown    │ • 3 full rental months statutory notice calculator                    │
+│ • Export formatted RTB Evidence Dossier       │ • Generate & copy legal Form RTB-7 notice schedule                    │
 └───────────────────────────────────────────────┴───────────────────────────────────────────────────────────────────────┘
 ```
 
-* **Card 1: Member Protection & Legal Defense Passport**
-  * Displays active member ID (`BC-MEM-XXXX`), verified RTA defense status, and active plan tier.
-  * Frosted glass action button to download the complete **2026 Statutory Legal Defense Kit**.
-  * Quick shortcut to Stripe Customer Portal and invoices.
-* **Card 2: Official RTB Statutory Gateway**
-  * Quick-access buttons for mandatory BC government tenancy forms (`RTB-30`, `RTB-27`, `RTB-7`, `RTB-33`).
-  * Deemed Service Timing bar citing RTA Sections 88 and 90 (In person = same day; Door/Box = +3 days; Registered mail = +5 days).
-  * Direct access to the Form RTB-34 Proof of Service checklist.
-* **Card 3: Membership Billing & CRA Tax Invoices (Replaces radial gauge)**
-  * Displays full itemized invoice details directly on the card:
-    * Invoice Reference: `LBC-INV-XXXX-2026`
-    * Member Email & Account ID
-    * Annual Membership Fee: `$290.00 CAD` (or `$590.00 CAD`)
-    * GST (5% Non-Profit Exempt): `$0.00 CAD`
-    * PST (Provincial Sales Tax Exempt): `$0.00 CAD`
-    * **Total Paid (Annual Subscription):** `$290.00 CAD` (or `$590.00 CAD`)
-  * Displays CRA Form T776 Line 8810 / Line 8871 100% tax-deductible rental business expense classification.
-  * Glass UI action buttons: `Stripe Portal ↗` and `Tax Receipt ↓`.
-* **Card 4: Private Property Vault & Unit Ledger**
-  * Tracks individual units (`Vancouver Suite #204`, `Kelowna Duplex Unit B`, etc.) with move-in dates, tenant names, and trust accounts.
-  * **Statutory 15-Day Security Deposit Return Countdown:** Monitors RTA Section 38(1) deadlines once a forwarding address is received, warning owners of Section 38(6) double-deposit penalties if overdue.
-  * Tracks Form RTB-27 move-in/out condition report execution and annual smoke/CO safety inspections.
-  * One-click **Export RTB Dossier ↓** generating a formatted, arbitrator-admissible evidence package.
-* **Card 5: 2026 Statutory Rent Increase Engine**
-  * Calculates statutory 3.0% maximum annual rent increases in real time.
-  * Service method dropdown (In Person, Door Posting +3d, Registered Mail +5d) automatically calculating the **Earliest Lawful Effective Date** and **Latest Recommended Service Date** under Section 42 (3 full rental payment months).
-  * 12-Month Rule compliance validator.
-  * Structured Form RTB-7 schedule copy to clipboard and downloadable `.txt` document.
+### Card 1: Member Legal Defense Passport
+* Displays the active **Member ID** (`BC-MEM-XXXX`), statutory RTA defense status, and active billing interval badge.
+* Includes one-click action to download the complete **2026 Statutory Legal Defense Kit**.
+* Direct link to the **Stripe Customer Portal** (`Invoices & Portal ↗`).
+
+### Card 2: Official RTB Statutory Gateway
+* Instant downloads of mandatory unedited BC government tenancy forms:
+  * **RTB-30:** 10-Day Notice to End Tenancy for Unpaid Rent or Utilities
+  * **RTB-27:** Condition Inspection Report (Mandatory under RTA Section 23 & 35)
+  * **RTB-7:** Notice of Rent Increase (Section 42 & 43)
+  * **RTB-33:** One-Month Notice to End Tenancy for Cause
+* Real-time **Deemed Service Rules bar** citing RTA Sections 88 and 90:
+  * *In Person:* Same day
+  * *Door / Mailbox Slot:* +3 days
+  * *Registered Mail:* +5 days
+
+### Card 3: Billing & CRA Tax Deductible Invoices
+* *Replaces previous radial meter card with direct accounting ledger:*
+  * **Invoice Reference:** `LBC-INV-XXXX-2026`
+  * **Member Account Email & ID**
+  * **Subtotal:** `$290.00 CAD` (Monthly) or `$590.00 / $999.00 CAD` (Annual)
+  * **GST (Non-Profit Association):** `$0.00 CAD`
+  * **Total Paid:** Matches selected tier and billing frequency
+* Direct CRA rental deduction disclosure citing **Form T776 Line 8810 / Line 8871**.
+* Action buttons to launch the **Stripe Billing Portal** or retrieve official tax receipts.
+
+### Card 4: Private Property Vault & Unit Ledger
+* Tracks rental suites with move-in dates, tenant contacts, and condition inspection logs.
+* **Statutory 15-Day Security Deposit Return Countdown:** Monitors Section 38(1) deadlines once a forwarding address is received, protecting owners from Section 38(6) double-deposit penalties.
+* One-click **Export RTB Dossier ↓** generating an indexed evidence report ready for arbitration.
+
+### Card 5: 2026 Statutory Rent Increase Engine
+* Computes allowable annual rent increase in real time based on the official BC 2026 statutory cap (**3.0%**).
+* Calculates **Earliest Lawful Effective Date** and **Recommended Service Date** under Section 42 (requiring 3 full rental months' notice).
+* Generates copyable, unedited RTB-7 schedule text.
 
 ---
 
-### 3. Interactive In-Page "Mini Screens" (Modals)
-Clicking on any Bento card (or its `Mini Screen ↗` badge) opens a comprehensive, in-depth modal right in the page:
-1. **Passport Mini Screen:** Details the 4 Statutory Defense Pillars (RTA Sec 5 Non-Contracting Out, RTB-30 Expedited Notice Defense, RTB-27 Condition Inspection Shield, RTB-7 Rent Regulation Cap), hotline PIN routing, and complete defense kit download.
-2. **Forms Gateway Mini Screen:** Searchable catalogue of all 12+ official forms and practical templates with instant text dossier download or official government PDF link.
-3. **Billing & Tax Mini Screen:** Line-by-line accounting statement, Canada Revenue Agency Guide T4036 rental deduction guide, 6-year retention compliance notice, Stripe Customer Portal launcher, and CRA tax receipt download.
-4. **Property Vault Mini Screen:** Full ledger table of all rental suites, active deposit countdown watches, inspection status, unit creation (`+ Add Unit Record`), and individual RTB dispute dossier exports.
-5. **Calculator Mini Screen:** Advanced rent increase calculator with 12-month rule check, Section 42 calendar lead times, interactive preview box, copy to clipboard, and downloadable RTB-7 notice schedule.
+## 5. Interactive In-Page Mini Screens
 
-> **UX Refinements:** All inner buttons, text inputs, date pickers, selects, and links invoke `e.stopPropagation()` so interacting with controls will never accidentally trigger the parent card's modal. Pressing `Esc` closes any active mini screen.
+Clicking on any Bento card (or its header badge) expands an in-page modal overlay providing granular depth without navigating away:
 
----
-
-### 4. Zero-Disclosure Privacy Charter & Device Encryption
-* **Client-Sealed Data:** Property records, tenant names, and inspection observations are stored exclusively in the browser's local sandbox (`localStorage`).
-* **No Centralized Tenant Blacklists:** Landlords BC strictly refuses to operate public tenant registries or share member case logs with external third parties.
-* **Arbitration Confidentiality:** Evidence exports are generated on-the-fly client-side as plain text or formatted files ready for upload to the RTB Dispute Access Portal.
+| Mini Screen | Title | Capabilities & Content |
+| :--- | :--- | :--- |
+| **Screen 1** | **Statutory Defense Passport** | Deep dive into the 4 Statutory Defense Pillars (RTA Sec 5 Non-Contracting Out, RTB-30 Expedited Defense, RTB-27 Inspection Shield, RTB-7 Rent Regulation Cap), advisor helpline routing PIN, and complete defense kit download. |
+| **Screen 2** | **Official RTB Forms Gateway** | Full searchable library of 12+ official RTB forms with detailed procedural guidance, service checklists, and unedited template downloads. |
+| **Screen 3** | **Billing & Tax Invoices Ledger** | Line-by-line accounting statement, CRA Guide T4036 rental expense deduction guide, 6-year audit retention compliance, live Stripe payment lookup, and direct invoice PDF launcher. |
+| **Screen 4** | **Private Property Vault** | Expanded multi-suite property ledger, unit creation (`+ Add Unit Record`), deposit return countdown monitors, and individual RTB dispute dossier exports. |
+| **Screen 5** | **Rent Increase Simulator** | Multi-factor rent increase calculator with 12-month rule validation, service method adjustments, live copy-to-clipboard RTB-7 schedule, and downloadable text notices. |
 
 ---
 
-### 5. CRA Real Estate Rental Tax Compliance (Form T776)
-Pursuant to Canada Revenue Agency (CRA) guidelines in **Guide T4036 (Rental Income)** and **Form T776 (Statement of Real Estate Rentals)**:
-* Annual membership fees and legal defense subscriptions incurred to earn rental property income are **100% tax-deductible** from gross rental revenues.
-* **Recommended Tax Return Line Items:**
-  * **Part 4, Line 8810:** *"Legal, accounting and other professional fees"* (for individual landlords).
-  * **Part 4, Line 8871:** *"Management and administration fees"* (for property managers and corporate housing operators).
-* **Audit Retention Requirement:** Receipts must be retained for at least **6 taxation years** in accordance with CRA compliance rules.
+## 6. Automated Transactional Email Engine
+
+When a new user completes Stripe Checkout:
+
+1. **Session Confirmation (`/api/confirm-session`)**:
+   * Queries Stripe directly for the session ID to retrieve the customer's verified name and email address.
+   * Registers the active membership in `server/data/members.json` and client storage.
+2. **Dual-Recipient Delivery**:
+   * **To Customer:** Sends the **Welcome & Payment Confirmation Dossier** with Member ID, subscription details, statutory rights summary, and priority helpline access (**1-888-330-6707**).
+   * **BCC to Host (`HOST_EMAIL`):** Automatically delivers an exact copy to `reddysantosh1310@gmail.com` as an instant notification of new member activation and payment.
 
 ---
 
-## 🛠️ Technology Stack
+## 7. CRA Real Estate Rental Tax Compliance (Form T776)
 
-| Layer | Technologies |
-| :--- | :--- |
-| **Frontend Framework** | [React 19](https://react.dev/) (`^19.0.1`), [React DOM 19](https://react.dev/) |
-| **Language & Typing** | [TypeScript 7](https://www.typescriptlang.org/) (`^7.0.2`), Strict mode enabled |
-| **Build Tool & Bundler** | [Vite 8](https://vitejs.dev/) (`^8.3.0`) with `@vitejs/plugin-react` |
-| **Styling & Design System** | [Tailwind CSS v4](https://tailwindcss.com/) (`^4.3.3`), Autoprefixer, Custom Glass UI |
-| **Motion & Scroll Physics** | [Lenis](https://lenis.darkroom.engineering/) (`^1.3.27`), [Motion](https://motion.dev/) (`^12.23.24`) |
-| **Icons & Typography** | [Lucide React](https://lucide.dev/) (`^0.546.0`), Inter Tight & Serif typography |
-| **Payments & Billing** | [Stripe Node SDK](https://stripe.com/docs/api) (`^23.2.0`), [@stripe/stripe-js](https://stripe.com/docs/js) (`^10.3.0`) |
-| **Authentication** | Google Identity Services (OAuth 2.0 Web Client), Local Session Token Storage |
-| **Transactional Email** | [Nodemailer](https://nodemailer.com/) (`^10.6.1`) with SMTP TLS |
-| **Backend / Serverless** | Express middleware (`server/stripeMiddleware.ts`) for local dev; Vercel Serverless Functions (`/api/*.js`) for production |
+Pursuant to Canada Revenue Agency (CRA) guidelines in **Guide T4036 (Rental Income)**:
+
+* Membership fees, legal defense passports, and statutory compliance subscriptions incurred to earn rental property income are **100% tax-deductible** from gross rental revenues.
+* **Recommended Tax Lines:**
+  * **Form T776, Part 4, Line 8810:** *"Legal, accounting and other professional fees"* (Individual rental owners).
+  * **Form T776, Part 4, Line 8871:** *"Management and administration fees"* (Property management companies and commercial operators).
+* **Statutory Retention:** Invoices and receipts must be retained for at least **6 taxation years** for CRA audit verification.
 
 ---
 
-## 📁 Project Directory Structure
+## 8. Technology Stack
+
+| Layer | Technology | Details |
+| :--- | :--- | :--- |
+| **Frontend Framework** | [React 19](https://react.dev/) (`^19.0.1`) | Functional components, hooks, high-performance rendering |
+| **Language** | [TypeScript 7](https://www.typescriptlang.org/) (`^7.0.2`) | Strict typing, zero-implicit-any across all modules |
+| **Build & Dev Tool** | [Vite 8](https://vitejs.dev/) (`^8.3.8`) | Instant HMR, optimized production rollup bundling |
+| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) (`^4.3.3`) | Golden luxury palette, frosted glass UI, responsive breakpoints |
+| **Scroll Physics** | [Lenis](https://lenis.darkroom.engineering/) (`^1.3.27`) | Smooth inertial scroll physics across public pages |
+| **Animations** | [Motion](https://motion.dev/) (`^12.23.24`) | Micro-interactions and smooth modal transitions |
+| **Iconography** | [Lucide React](https://lucide.dev/) (`^0.546.0`) | Clean SVG icons |
+| **Payment Gateway** | [Stripe SDK](https://stripe.com/docs/api) (`^23.2.0`) | Recurring subscriptions, Customer Portal, CAD currency |
+| **Transactional Email** | [Nodemailer](https://nodemailer.com/) (`^10.6.1`) | TLS SMTP transport with verified Gmail / SES delivery |
+| **Backend / API** | Express & Serverless | Vite dev server middleware & production Vercel functions |
+
+---
+
+## 9. Project Directory Structure
 
 ```
 Landlords/
 ├── api/                               # Production Vercel Serverless Functions
-│   ├── check-membership.js            # Validates active Stripe subscription by email
-│   ├── create-checkout-session.js     # Creates Stripe dynamic checkout session in CAD
+│   ├── check-membership.js            # Validates active membership via Stripe & registry
+│   ├── confirm-session.js             # Confirms checkout session & dispatches welcome emails
+│   ├── create-checkout-session.js     # Creates Stripe recurring subscription session in CAD
 │   ├── create-portal-session.js       # Launches Stripe Customer Billing Portal
+│   ├── get-stripe-payments.js         # Queries live Stripe test/live charges for customer
 │   ├── send-welcome-receipt.js        # Dispatches transactional welcome receipt via SMTP
 │   └── submit-testimony.js            # Forwards confidential intake testimony to host
-├── dist/                              # Compiled production static bundle (Vite build)
-├── public/                            # Static public assets
-│   ├── assets/landlord/               # Architecture artwork & SVG graphics
-│   │   ├── landlord-profile.svg       # Animated stylish BC landlord character
-│   │   ├── penthouse-living.svg       # Penthouse architectural illustration
-│   │   ├── staged-kitchen.svg         # Property condition inspection documentation
-│   │   └── sunlit-facade.svg          # Sunlit heritage apartment building facade
-│   └── favicon.ico                    # Application favicon
-├── server/                            # Local Development Server & Express Middleware
+├── dist/                              # Compiled static production bundle
+├── public/                            # Static assets and architectural illustrations
+│   └── assets/landlord/               # SVG illustrations (penthouse, facade, kitchen)
+├── server/                            # Local Dev Server & Express Middleware
 │   ├── data/                          # Local persisted member & testimony storage
-│   ├── emailService.ts                # Nodemailer email dispatch service
-│   └── stripeMiddleware.ts            # Vite Express middleware mirroring production serverless APIs
+│   │   ├── members.json               # Active registered member registry
+│   │   └── testimonies.json           # Intake reports archive
+│   ├── emailService.ts                # Nodemailer email dispatch service with host BCC
+│   └── stripeMiddleware.ts            # Vite Express middleware mirroring production APIs
 ├── src/                               # Application Frontend Source Code
 │   ├── components/                    # UI Components
-│   │   ├── MemberDashboardPage.tsx    # Complete Bento Grid Dashboard & 5 Mini Screen Modals
-│   │   ├── ResourcesModal.tsx         # Public Statutory Resources & Documentation modal
-│   │   └── ...                        # Core page components, modals, and navigation
-│   ├── data/                          # Statutory Datasets & Knowledge Base
-│   │   ├── constants.ts               # Contact details, helpline phone, hours, and pricing
-│   │   └── forms.ts                   # All 12+ Official RTB forms catalogue with descriptions
-│   ├── styles/                        # Style definitions
-│   │   └── main.css                   # Bento grid layout, frosted glass styling, and animations
-│   ├── App.tsx                        # Root router, view switcher & Google auth handler
-│   ├── index.css                      # Global Tailwind and font declarations
-│   └── main.tsx                       # React 19 root bootstrap
-├── .env.example                       # Reference environment variables template
-├── package.json                       # Dependencies and project run scripts
+│   │   ├── MemberDashboardPage.tsx    # Complete Bento Grid Dashboard & 5 Mini Screens
+│   │   ├── Modal.tsx                  # Public Membership Checkout Modal
+│   │   ├── Hero.tsx                   # Public Landing Hero & Value Proposition
+│   │   ├── ResourcesModal.tsx         # Public Statutory Guides & Legal Kit Preview
+│   │   ├── EventsNewsModal.tsx        # BC Rental Policy & Legislative Updates
+│   │   ├── PolicyModal.tsx            # Zero-Disclosure Privacy Charter & Terms
+│   │   ├── ContactFooter.tsx          # Public Footer with helpline & direct links
+│   │   └── FAQSection.tsx             # Frequently Asked Questions
+│   ├── data/                          # Static Datasets & Pricing Definitions
+│   │   ├── pricing.ts                 # Individual ($290/mo), PM ($590/yr), Custom ($999/yr)
+│   │   ├── forms.ts                   # 12+ Official RTB forms catalogue
+│   │   └── eventsNews.ts              # Rental policy announcements
+│   ├── styles/                        # Custom CSS & Glass UI definitions
+│   ├── App.tsx                        # Root Router, session handler, Lenis scroll
+│   └── main.tsx                       # React 19 bootstrap entry
+├── .env.example                       # Reference environment variables
+├── .env.local                         # Active environment configuration (git-ignored)
+├── package.json                       # Dependencies & build scripts
 ├── tsconfig.json                      # Strict TypeScript compiler options
-├── vercel.json                        # Vercel deployment routes and serverless configuration
-└── vite.config.ts                     # Vite build, React plugin, and Stripe middleware config
+└── vite.config.ts                     # Vite build configuration & server middleware
 ```
 
 ---
 
-## 🔌 API Reference & Serverless Endpoints
+## 10. Complete API Reference
 
-All endpoints support both local Vite development (via `server/stripeMiddleware.ts`) and production Vercel deployment (via `/api/*.js`):
+All endpoints operate identically in local development (via `server/stripeMiddleware.ts`) and production (via `/api/*.js`):
 
 ### 1. `POST /api/create-checkout-session`
-Initializes a Stripe Checkout Session for annual membership in Canadian Dollars (`CAD`).
-* **Request Body:**
+Initializes a Stripe Checkout Session for recurring membership in Canadian Dollars (`CAD`).
+* **Request:**
   ```json
   {
-    "plan": "Individual Membership ($290 CAD / year)",
+    "plan": "individual",
     "email": "landlord@example.bc.ca",
-    "name": "Jane Doe",
-    "returnUrl": "https://landlordsbc.org"
+    "billingType": "recurring"
+  }
+  ```
+* **Plans Supported:**
+  * `individual`: `$290.00 CAD / month` (`mode: 'subscription'`, `interval: 'month'`)
+  * `property-manager`: `$590.00 CAD / year` (`mode: 'subscription'`, `interval: 'year'`)
+  * `custom`: `$999.00 CAD / year` (`mode: 'subscription'`, `interval: 'year'`)
+* **Response:**
+  ```json
+  {
+    "sessionId": "cs_test_a0...",
+    "url": "https://checkout.stripe.com/g/pay/cs_test_..."
+  }
+  ```
+
+### 2. `POST /api/confirm-session`
+Retrieves customer details from the completed Stripe session, registers membership, and sends welcome emails.
+* **Request:**
+  ```json
+  {
+    "sessionId": "cs_test_a0..."
   }
   ```
 * **Response:**
   ```json
   {
-    "id": "cs_test_a1b2c3...",
-    "url": "https://checkout.stripe.com/c/pay/cs_test_..."
+    "success": true,
+    "email": "landlord@example.bc.ca",
+    "name": "Jane Doe",
+    "plan": "Landlords BC — Individual Membership (Monthly)",
+    "memberId": "BC-MEM-8421",
+    "emailDispatched": true,
+    "paymentStatus": "paid"
   }
   ```
 
-### 2. `POST /api/create-portal-session`
-Generates an authenticated session URL redirecting the member to the **Stripe Customer Portal** to manage payment methods, download invoices, or update subscriptions.
-* **Request Body:**
+### 3. `POST /api/create-portal-session`
+Launches the Stripe Customer Billing Portal for invoice downloads, card management, or subscription management.
+* **Request:**
   ```json
   {
     "email": "landlord@example.bc.ca",
@@ -242,57 +350,64 @@ Generates an authenticated session URL redirecting the member to the **Stripe Cu
   }
   ```
 
-### 3. `POST /api/check-membership`
-Queries Stripe customer records to determine if an email has an active, paid membership.
-* **Request Body:**
+### 4. `GET /api/get-stripe-payments`
+Queries live Stripe charges and invoices for an email address.
+* **Query Parameter:** `?email=landlord@example.bc.ca`
+* **Response:**
   ```json
   {
-    "email": "landlord@example.bc.ca"
+    "email": "landlord@example.bc.ca",
+    "isTestMode": true,
+    "hasPayments": true,
+    "totalPaid": 290.00,
+    "payments": [
+      {
+        "id": "ch_3Q...",
+        "amount": 290.00,
+        "currency": "CAD",
+        "status": "succeeded",
+        "created": 1732553000,
+        "invoiceUrl": "https://pay.stripe.com/invoice/..."
+      }
+    ]
   }
   ```
+
+### 5. `POST /api/check-membership`
+Verifies whether an email belongs to an active, registered member.
+* **Request:** `{ "email": "landlord@example.bc.ca" }`
 * **Response:**
   ```json
   {
     "isMember": true,
-    "plan": "Individual Membership ($290 CAD / year)",
-    "customerId": "cus_test_...",
-    "memberId": "BC-MEM-8421"
+    "plan": "Individual Membership ($290 CAD / month)",
+    "memberId": "BC-MEM-8421",
+    "status": "active"
   }
   ```
 
-### 4. `POST /api/send-welcome-receipt`
-Dispatches an official welcome email and CRA tax deductible receipt copy to a newly confirmed member.
-* **Request Body:**
+### 6. `POST /api/submit-testimony`
+Accepts confidential dispute narratives and delivers them directly to the host's email inbox.
+* **Request:**
   ```json
   {
-    "email": "landlord@example.bc.ca",
-    "plan": "Individual Membership ($290 CAD / year)"
+    "alias": "Anonymous Landlord",
+    "contact": "owner@example.bc.ca",
+    "experience": "Tenancy concluded with unpaid rent..."
   }
   ```
-
-### 5. `POST /api/submit-testimony`
-Accepts confidential intake testimonies from BC rental owners and forwards them directly to the association host inbox via SMTP while preserving member privacy.
-* **Request Body:**
-  ```json
-  {
-    "name": "Anonymous Property Owner",
-    "email": "owner@example.bc.ca",
-    "propertyType": "Duplex / Secondary Suite",
-    "testimony": "Tenancy concluded with $4,200 in unpaid rent. RTB hearing wait times exceeded 4 months..."
-  }
-  ```
+* **Response:** `{ "success": true, "recordId": "BC-9841" }`
 
 ---
 
-## 🚀 Quick Start (Local Development)
+## 11. Quick Start & Local Development
 
 ### 1. Prerequisites
-- **Node.js:** v18.0.0 or higher
-- **npm:** v9.0.0 or higher
-- **Git**
+* **Node.js:** v18.0.0 or higher (v20+ recommended)
+* **npm:** v9.0.0 or higher
+* **Git**
 
 ### 2. Installation
-Clone the repository and install dependencies:
 ```bash
 git clone https://github.com/RESKCORE/LandLords-BC-.git
 cd Landlords
@@ -300,135 +415,116 @@ npm install
 ```
 
 ### 3. Environment Configuration
-Copy `.env.example` to create your local `.env.local`:
-```bash
-cp .env.example .env.local
-```
-
-Configure your credentials inside `.env.local`:
+Create a `.env.local` file in the root directory:
 ```env
-# Stripe Configuration (from Stripe Dashboard > Developers > API keys)
+# Stripe Configuration (Test Mode)
 STRIPE_SECRET_KEY=sk_test_YOUR_STRIPE_SECRET_KEY
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_YOUR_STRIPE_PUBLISHABLE_KEY
 
-# Google Identity Services (from Google Cloud Console > APIs & Credentials)
+# Google Identity Services (OAuth Client ID)
 VITE_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 
-# Host Email for confidential tenancy testimonies
-HOST_EMAIL=host@landlordsbc.org
+# Host Email for Admin Alerts & Testimonies
+HOST_EMAIL=reddysantosh1310@gmail.com
 
-# SMTP Configuration (Gmail App Password, AWS SES, SendGrid, or Mailgun)
+# SMTP Transactional Email Configuration
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=notifications@landlordsbc.org
-SMTP_PASS=your_smtp_app_password
-SMTP_FROM=Landlords BC Intake <notifications@landlordsbc.org>
+SMTP_USER=your_verified_gmail@gmail.com
+SMTP_PASS=your_16_digit_app_password
+SMTP_FROM=Landlords BC Support <your_verified_gmail@gmail.com>
 
-# Port (Optional, defaults to 3000)
+# Server Port
 PORT=3000
 ```
 
-> **Security Note:** `.env*` files are strictly excluded from source control in `.gitignore`. Never commit API secret keys or passwords.
-
-### 4. Run Local Dev Server
+### 4. Run Development Server
 ```bash
 npm run dev
 ```
 Open **[http://localhost:3000](http://localhost:3000)** in your browser.
-To inspect the member dashboard directly, navigate to **[http://localhost:3000/?page=dashboard](http://localhost:3000/?page=dashboard)**.
+To access the member dashboard directly: **[http://localhost:3000/?page=dashboard](http://localhost:3000/?page=dashboard)**.
+
+### 5. Build Verification
+```bash
+npm run build
+```
 
 ---
 
-## 📋 Available Scripts
+## 12. Stripe Test Mode & Production Migration Guide
 
-| Command | Description |
-| :--- | :--- |
-| `npm run dev` | Launches Vite local development server with integrated Stripe & intake middleware on port 3000 |
-| `npm run build` | Compiles optimized, minified static production bundle into `/dist` using TypeScript compiler & Vite |
-| `npm run lint` | Runs strict TypeScript type-checking without emitting files (`tsc --noEmit`) |
-| `npm run preview` | Previews the compiled `/dist` production build locally |
-| `npm start` | Launches full Express Node.js server via `tsx server.js` (for VPS or containerized environments) |
+The application is currently operating strictly in **Stripe Sandbox / Test Mode** (`sk_test_...`).
 
----
+### Testing in Sandbox
+Use the standard Stripe test card:
+* **Card Number:** `4242 •••• •••• 4242`
+* **Expiry:** Any future date (e.g. `12/28`)
+* **CVC:** `123`
+* **Postal Code:** `V6B 2W9` (Vancouver)
 
-## 💳 Stripe Sandbox Testing
-
-When testing membership purchases or Customer Portal sessions in Stripe test mode, use the following test card credentials:
-
-| Parameter | Test Value |
-| :--- | :--- |
-| **Card Number** | `4242 •••• •••• 4242` |
-| **Expiry Date** | Any future date (e.g. `12/28`) |
-| **CVC / CVV** | Any 3 digits (e.g. `123`) |
-| **Billing Country** | `Canada` |
-| **Postal Code** | `V6B 2W9` (Vancouver) or `V8W 1P6` (Victoria) |
-
-### Stripe Customer Portal Activation
-To enable the **Stripe Portal ↗** feature:
-1. Log in to your [Stripe Dashboard](https://dashboard.stripe.com/test/settings/billing/portal).
-2. Navigate to **Settings > Billing > Customer Portal**.
-3. Activate the Customer Portal and check the options to allow customers to view invoices, update payment methods, and manage subscriptions.
-4. Save changes.
+### Steps to Migrate to Live Mode
+When your client is ready to accept real payments:
+1. Log into the [Stripe Dashboard](https://dashboard.stripe.com/).
+2. Toggle the dashboard switch from **Test mode** to **Live mode**.
+3. Copy the live API keys:
+   * `sk_live_...` (Secret Key)
+   * `pk_live_...` (Publishable Key)
+4. Update the production environment variables in Vercel (or hosting dashboard):
+   * `STRIPE_SECRET_KEY = sk_live_...`
+   * `VITE_STRIPE_PUBLISHABLE_KEY = pk_live_...`
+5. Enable the **Customer Portal** under **Stripe Dashboard > Settings > Billing > Customer Portal**.
+6. Redeploy. No code changes are required.
 
 ---
 
-## 🌐 Production Deployment Guide
+## 13. Production Deployment Guide
 
 ### Option A: Vercel (Recommended Serverless Deployment)
 
-1. Push your code to your GitHub repository:
+1. Push your latest code:
    ```bash
    git push origin main
    ```
-2. Log in to [Vercel](https://vercel.com/) and click **Add New > Project**, then import your `LandLords-BC-` repository.
-3. **Configure Build Settings:**
+2. Log in to [Vercel](https://vercel.com/) and import your `LandLords-BC-` repository.
+3. Configure build parameters:
    * **Framework Preset:** `Vite`
    * **Build Command:** `npm run build`
    * **Output Directory:** `dist`
-   * **Install Command:** `npm install`
-4. **Configure Environment Variables in Vercel:**
-   * `STRIPE_SECRET_KEY` = `sk_live_...` (or `sk_test_...`)
-   * `VITE_STRIPE_PUBLISHABLE_KEY` = `pk_live_...` (or `pk_test_...`)
-   * `VITE_GOOGLE_CLIENT_ID` = `your_production_google_client_id`
-   * `HOST_EMAIL` = `host@landlordsbc.org`
-   * `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
-5. **Google Cloud Console Update:**
-   * Add your live production domain (e.g. `https://your-domain.vercel.app`) to **Authorized JavaScript origins** in your Google Cloud OAuth Client credentials.
-6. Click **Deploy**. Vercel will automatically deploy both the Vite static bundle and the serverless functions in `/api`.
+4. Add all environment variables from `.env.local` in Vercel's Project Settings.
+5. In **Google Cloud Console**, add your live production domain to **Authorized JavaScript origins**.
+6. Click **Deploy**.
+
+### Option B: Node.js Server / VPS / Docker
+```bash
+npm install
+npm run build
+node server.js
+```
 
 ---
 
-### Option B: Render / Railway / Docker / VPS (Node.js Server)
-
-1. Set up a Node.js web service on Render, Railway, DigitalOcean, or an Ubuntu VPS.
-2. **Build Command:** `npm install && npm run build`
-3. **Start Command:** `npm start`
-4. Provide all environment variables from `.env.example` in the host dashboard.
-5. Point your custom DNS domain with an SSL certificate.
-
----
-
-## ⚖️ Statutory Legislation & Citations
+## 14. Statutory Legislation & Legal Citations
 
 All procedural tools, deemed service schedules, and notice templates comply with codified British Columbia tenancy legislation:
 
-- **Primary Legislation:** [Residential Tenancy Act [SBC 2002] c. 78](https://www.bclaws.gov.bc.ca/civix/document/id/complete/statreg/02078_01)
-  - **Section 5:** Prohibits contracting out of the Act; statutory terms prevail over conflicting tenancy agreement terms.
-  - **Section 19:** Limits security deposits and pet damage deposits to a maximum of one-half of one month's rent each.
-  - **Section 23 & 35:** Mandates landlord and tenant move-in and move-out condition inspections (Form RTB-27).
-  - **Section 38:** Mandates repayment of deposits or filing an RTB dispute application within 15 days of tenancy end and receipt of written forwarding address; Section 38(6) doubles deposit liabilities for non-compliance.
-  - **Section 42 & 43:** Sets rules for statutory rent increases, requiring at least 3 full rental payment months' notice on Form RTB-7 capped at the annual allowable percentage (3.0% in 2026).
-  - **Section 46:** 10-Day Notice to End Tenancy for Unpaid Rent or Utilities (Form RTB-30).
-  - **Section 88 & 90:** Deemed service timelines (Same day in person; 3 days posted to door/mailbox; 5 days sent by registered mail).
-- **Subordinate Regulation:** [Residential Tenancy Regulation [B.C. Reg. 477/2003]](https://www.bclaws.gov.bc.ca/civix/document/id/complete/statreg/477_2003)
-- **Dispute Resolution Branch:** [BC Residential Tenancy Branch (RTB)](https://www2.gov.bc.ca/gov/content/housing-tenancy/residential-tenancies)
-- **Tax Legislation:** [Canada Revenue Agency (CRA) Form T776 / Guide T4036](https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/t4036.html)
+* **Primary Legislation:** [Residential Tenancy Act [SBC 2002] c. 78](https://www.bclaws.gov.bc.ca/civix/document/id/complete/statreg/02078_01)
+  * **Section 5:** Prohibits contracting out of the Act; statutory terms prevail over conflicting lease clauses.
+  * **Section 19:** Limits security deposits and pet damage deposits to one-half of one month's rent each.
+  * **Section 23 & 35:** Mandates landlord and tenant move-in and move-out condition inspections (Form RTB-27).
+  * **Section 38:** Mandates deposit return or dispute application within 15 days of forwarding address receipt; Section 38(6) doubles deposit liabilities for non-compliance.
+  * **Section 42 & 43:** Sets rules for statutory rent increases, requiring 3 full rental months' notice on Form RTB-7 capped at the annual allowable percentage (**3.0% in 2026**).
+  * **Section 46:** 10-Day Notice to End Tenancy for Unpaid Rent or Utilities (Form RTB-30).
+  * **Section 88 & 90:** Codified deemed service timelines (Same day in person; 3 days posted to door/mailbox; 5 days sent by registered mail).
+* **Subordinate Regulation:** [Residential Tenancy Regulation [B.C. Reg. 477/2003]](https://www.bclaws.gov.bc.ca/civix/document/id/complete/statreg/477_2003)
+* **Administrative Tribunal:** [BC Residential Tenancy Branch (RTB)](https://www2.gov.bc.ca/gov/content/housing-tenancy/residential-tenancies)
+* **Tax Code:** [Canada Revenue Agency (CRA) Form T776 / Guide T4036](https://www.canada.ca/en/revenue-agency/services/forms-publications/publications/t4036.html)
 
 ---
 
-## 🔒 Disclaimer & Legal Notice
+## 15. Disclaimer & Legal Notice
 
-Landlords BC is a professional member association and educational platform dedicated to advancing lawful compliance and financial security for residential property owners across British Columbia. 
+Landlords BC is a professional member association and educational platform dedicated to advancing lawful statutory compliance and financial security for residential property owners across British Columbia. 
 
 The software, calculators, evidence checklists, and documentation dossiers provided through this platform are designed for statutory procedural compliance under the *Residential Tenancy Act [SBC 2002] c. 78*. They do not constitute formal legal advice or substitute for consultation with a licensed legal practitioner or designated RTB dispute advisor. All unit documentation, inspection notes, and dispute dossiers are sealed on device under our **Zero-Disclosure Charter**.
 
