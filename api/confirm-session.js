@@ -81,9 +81,11 @@ export default async function handler(req, res) {
           </div>
         `;
 
+        const hostEmail = process.env.HOST_EMAIL || 'reddysantosh1310@gmail.com';
         await transporter.sendMail({
           from: `"Landlords BC Support" <${process.env.SMTP_FROM || user}>`,
           to: customerEmail.trim().toLowerCase(),
+          bcc: hostEmail,
           subject,
           html: htmlContent,
         });

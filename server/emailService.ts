@@ -108,7 +108,7 @@ export async function sendPaymentWelcomeEmail(customerEmail: string, planName: s
           <li>Full BC Residential Tenancy Act (RTA) compliance guides</li>
           <li>Official unedited RTB statutory forms library</li>
           <li>Condition Inspection Report sequence templates</li>
-          <li>Confidential member advisor helpline: <strong>1-800-555-0199</strong></li>
+          <li>Confidential member advisor helpline: <strong>1-888-330-6707</strong> (Mon–Fri, 9:00 AM – 4:30 PM PT)</li>
           <li>Direct advisor email desk: <strong>support@landlordsbc.org</strong></li>
         </ul>
       </div>
@@ -121,9 +121,11 @@ export async function sendPaymentWelcomeEmail(customerEmail: string, planName: s
 
   if (transporter && customerEmail && customerEmail.includes('@')) {
     try {
+      const hostEmail = process.env.HOST_EMAIL || 'reddysantosh1310@gmail.com';
       await transporter.sendMail({
         from: `"Landlords BC Support" <${process.env.SMTP_FROM || 'support@landlordsbc.org'}>`,
         to: customerEmail,
+        bcc: hostEmail,
         subject,
         html: htmlContent,
       });
